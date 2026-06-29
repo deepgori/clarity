@@ -39,6 +39,20 @@ logging.basicConfig(
 logger = logging.getLogger("clarity")
 
 
+def normalize_domain(raw: str) -> str:
+    """Clean up user input into a proper domain."""
+    domain = raw.strip().lower()
+    domain = domain.replace("https://", "").replace("http://", "")
+    domain = domain.rstrip("/")
+    # Remove www. prefix
+    if domain.startswith("www."):
+        domain = domain[4:]
+    # If no TLD (no dot), assume .com
+    if "." not in domain:
+        domain = domain + ".com"
+    return domain
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan events."""
@@ -99,10 +113,7 @@ async def analyze_company(request: ClarityRequest):
         ClarityResponse with structured intelligence or error
     """
     start_time = time.time()
-    domain = request.domain.strip().lower()
-
-    # Remove protocol prefix if provided
-    domain = domain.replace("https://", "").replace("http://", "").rstrip("/")
+    domain = normalize_domain(request.domain)
 
     logger.info(f"Analyzing: {domain}")
 
@@ -188,8 +199,7 @@ async def compare_emails(request: CompareRequest):
     a Clarity-powered personalized email. This is the core demo endpoint.
     """
     start_time = time.time()
-    domain = request.domain.strip().lower()
-    domain = domain.replace("https://", "").replace("http://", "").rstrip("/")
+    domain = normalize_domain(request.domain)
 
     logger.info(f"Compare request: {domain}")
 
