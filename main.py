@@ -11,6 +11,8 @@ import logging
 import sys
 from contextlib import asynccontextmanager
 
+from pydantic import BaseModel, Field
+from typing import Optional
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
@@ -20,6 +22,7 @@ from sources.website import fetch_website
 from sources.news import fetch_news
 from sources.github import fetch_github
 from synthesis.engine import synthesize_intelligence
+from agent import generate_generic_email, generate_clarity_email
 
 # Load environment variables
 load_dotenv()
@@ -142,6 +145,96 @@ async def analyze_company(request: ClarityRequest):
         return ClarityResponse(
             success=False,
             error=f"Analysis failed: {str(e)}",
+            processing_time_ms=elapsed,
+        )
+
+
+class CompareRequest(BaseModel):
+    """Request for side-by-side email comparison."""
+    domain: str = Field(description="Company domain to analyze")
+    selling: str = Field(description="What you're selling")
+
+
+class CompareResponse(BaseModel):
+    """Side-by-side email comparison response."""
+    success: bool
+    company_name: Optional[str] = None
+    generic_email: Optional[str] = None
+    clarity_email: Optional[str] = None
+    intelligence: Optional[CompanyIntelligence] = None
+    processing_time_ms: int = 0
+    error: Optional[str] = None
+
+
+@app.post("/api/compare", response_model=CompareResponse)
+async def compare_emails(request: CompareRequest):
+    """
+    Run the full pipeline: analyze a company, then generate two emails.
+
+    Returns a generic cold email (no intelligence) side-by-side with
+    a Clarity-powered personalized email. This is the core demo endpoint.
+    """
+    start_time = time.time()
+    domain = request.domain.strip().lower()
+    domain = domain.replace("https://", "").replace("http://", "").rstrip("/")
+
+    logger.info(f"Compare request: {domain}")
+
+    try:
+        # Step 1: Get intelligence
+        website_result, news_result, github_result = await asyncio.gather(
+            fetch_website(domain),
+            fetch_news(domain.split(".")[0], domain),
+            fetch_github(domain),
+        )
+
+        if not website_result.fetched:
+            elapsed = int((time.time() - start_time) * 1000)
+            return CompareResponse(
+                success=False,
+                error=f"Could not fetch website for {domain}",
+                processing_time_ms=elapsed,
+            )
+
+        intelligence = await synthesize_intelligence(
+            domain=domain,
+            website_result=website_result,
+            news_result=news_result,
+            github_result=github_result,
+            selling=request.selling,
+        )
+
+        # Step 2: Generate both emails in parallel
+        generic_email, clarity_email = await asyncio.gather(
+            generate_generic_email(
+                company_name=intelligence.company_name,
+                domain=domain,
+                selling=request.selling,
+            ),
+            generate_clarity_email(
+                intelligence=intelligence,
+                selling=request.selling,
+            ),
+        )
+
+        elapsed = int((time.time() - start_time) * 1000)
+        logger.info(f"Compare complete: {domain} in {elapsed}ms")
+
+        return CompareResponse(
+            success=True,
+            company_name=intelligence.company_name,
+            generic_email=generic_email,
+            clarity_email=clarity_email,
+            intelligence=intelligence,
+            processing_time_ms=elapsed,
+        )
+
+    except Exception as e:
+        elapsed = int((time.time() - start_time) * 1000)
+        logger.error(f"Compare error for {domain}: {e}", exc_info=True)
+        return CompareResponse(
+            success=False,
+            error=f"Comparison failed: {str(e)}",
             processing_time_ms=elapsed,
         )
 
