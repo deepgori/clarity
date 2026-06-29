@@ -1,11 +1,9 @@
 """
-Clarity API - AI SDR Agent
+Clarity API - Outreach Email Generator
 
-Demonstrates the value of Clarity by generating two outreach emails:
-1. A generic cold email (without Clarity intelligence)
-2. A personalized email powered by Clarity's structured intelligence
-
-The side-by-side comparison is the core demo moment.
+Generates two types of outreach emails:
+1. Generic cold email (baseline, for comparison in pitch docs)
+2. Intelligence-driven email that references specific research findings
 """
 
 import os
@@ -26,34 +24,45 @@ Write the kind of generic email that most AI SDR tools send today.
 Keep it under 100 words. No subject line, just the body."""
 
 
-CLARITY_EMAIL_PROMPT = """Write a short cold outreach email to {company_name}.
+CLARITY_EMAIL_PROMPT = """You are a top-performing SDR who just spent 30 minutes researching a company.
+Write a cold outreach email to {company_name} that could ONLY have been written by someone
+who did real research. This is NOT a template with the company name swapped in.
 
 You are selling: {selling}
 
-You have access to detailed intelligence about this company from Clarity's API:
+Here is everything you found about {company_name}:
 
 Company: {company_name} ({domain})
 What they do: {what_they_do}
-Industry: {industry}
-Stage: {stage}
+Industry: {industry} | Stage: {stage}
 
-Key signals:
+SIGNALS (recent moves that create urgency):
 {signals_text}
 
-Contradictions detected:
+CONTRADICTIONS (gaps between what they say and what they do):
 {contradictions_text}
 
-Recommended pitch angle: {recommended_angle}
-Conversation starter: {conversation_starter}
-Topics to avoid: {avoid_topics}
-Timing: {timing}
-Decision maker: {decision_maker}
+TECH STACK: {tech_stack}
 
-Hiring signals: {hiring_signals}
+HIRING PATTERNS: {hiring_signals}
 
-Write a highly personalized email that references specific details from the intelligence.
-Make it clear this was NOT a mass email. Keep it under 120 words. No subject line, just the body.
-Do not use em dashes."""
+RECOMMENDED ANGLE: {recommended_angle}
+TIMING: {timing}
+TARGET PERSONA: {decision_maker}
+
+RULES:
+1. Open with a SPECIFIC observation. Not "I noticed your company does X" but reference an actual signal,
+   contradiction, or hiring pattern. Show you did homework.
+2. Connect the observation to a real problem they likely face. Be specific about the pain.
+3. Reference at least ONE concrete detail from the intelligence (a signal, a contradiction,
+   a hiring pattern, or a tech stack choice) that most people would not know.
+4. Keep it under 100 words. Busy people skim.
+5. End with a low-friction ask (not "can I get 30 minutes of your time").
+6. Do NOT use the phrases: "I noticed", "I came across", "I hope this finds you well",
+   "I wanted to reach out", "leverage", "synergy".
+7. Do NOT use em dashes.
+8. Sound like a human, not a bot. No corporate buzzwords.
+9. No subject line, just the body."""
 
 
 async def generate_generic_email(
@@ -84,22 +93,23 @@ async def generate_clarity_email(
     """Generate a personalized email powered by Clarity intelligence."""
     client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-    # Format signals for the prompt
+    # Format signals with full context
     signals_text = "\n".join(
-        f"- {s.signal} (implication: {s.implication})"
+        f"- {s.signal} -> Sales implication: {s.implication}"
         for s in intelligence.signals
     ) or "None detected"
 
     contradictions_text = "\n".join(
-        f"- {c.claim_a} vs {c.claim_b} -> {c.resolution}"
+        f"- They claim: '{c.claim_a}' BUT evidence shows: '{c.claim_b}' -> Opportunity: {c.sales_implication}"
         for c in intelligence.contradictions
     ) or "None detected"
 
     avoid_topics = ", ".join(intelligence.sales_strategy.avoid_topics) or "None"
     hiring_signals = ", ".join(intelligence.hiring_signals) or "None detected"
+    tech_stack = ", ".join(intelligence.tech_stack) or "Unknown"
 
     response = await client.chat.completions.create(
-        model="gpt-4o-mini",
+        model="gpt-4o",
         messages=[
             {"role": "user", "content": CLARITY_EMAIL_PROMPT.format(
                 company_name=intelligence.company_name,
@@ -110,16 +120,15 @@ async def generate_clarity_email(
                 selling=selling,
                 signals_text=signals_text,
                 contradictions_text=contradictions_text,
+                tech_stack=tech_stack,
                 recommended_angle=intelligence.sales_strategy.recommended_angle,
-                conversation_starter=intelligence.sales_strategy.conversation_starter,
-                avoid_topics=avoid_topics,
                 timing=intelligence.sales_strategy.timing_assessment,
                 decision_maker=intelligence.sales_strategy.decision_maker_profile,
                 hiring_signals=hiring_signals,
             )},
         ],
         temperature=0.7,
-        max_tokens=250,
+        max_tokens=300,
     )
 
     return response.choices[0].message.content.strip()
