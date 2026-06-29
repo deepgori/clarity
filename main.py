@@ -118,14 +118,33 @@ async def analyze_company(request: ClarityRequest):
     logger.info(f"Analyzing: {domain}")
 
     try:
-        # Phase 1: Parallel source fetching
+        # Phase 1: Parallel source fetching (target company)
         logger.info("Phase 1: Parallel source fetching")
 
-        website_result, news_result, github_result = await asyncio.gather(
+        # Build fetch tasks - include seller website if provided
+        fetch_tasks = [
             fetch_website(domain),
             fetch_news(domain.split(".")[0], domain),
             fetch_github(domain),
-        )
+        ]
+
+        seller_content = None
+        if request.seller_domain:
+            seller_domain = normalize_domain(request.seller_domain)
+            logger.info(f"Also fetching seller website: {seller_domain}")
+            fetch_tasks.append(fetch_website(seller_domain))
+
+        results = await asyncio.gather(*fetch_tasks)
+
+        website_result = results[0]
+        news_result = results[1]
+        github_result = results[2]
+
+        if request.seller_domain and len(results) > 3:
+            seller_result = results[3]
+            if seller_result.fetched:
+                seller_content = seller_result.content
+                logger.info(f"Seller website fetched ({len(seller_content)} chars)")
 
         sources_status = (
             f"Website: {'ok' if website_result.fetched else 'miss'} | "
@@ -152,6 +171,7 @@ async def analyze_company(request: ClarityRequest):
             news_result=news_result,
             github_result=github_result,
             selling=request.selling,
+            seller_content=seller_content,
         )
 
         elapsed = int((time.time() - start_time) * 1000)
@@ -177,6 +197,10 @@ class CompareRequest(BaseModel):
     """Request for side-by-side email comparison."""
     domain: str = Field(description="Company domain to analyze")
     selling: str = Field(description="What you're selling")
+    seller_domain: Optional[str] = Field(
+        default=None,
+        description="Your company's domain for better pitch matching"
+    )
 
 
 class CompareResponse(BaseModel):
@@ -204,12 +228,29 @@ async def compare_emails(request: CompareRequest):
     logger.info(f"Compare request: {domain}")
 
     try:
-        # Step 1: Get intelligence
-        website_result, news_result, github_result = await asyncio.gather(
+        # Step 1: Fetch target company data + optional seller data
+        fetch_tasks = [
             fetch_website(domain),
             fetch_news(domain.split(".")[0], domain),
             fetch_github(domain),
-        )
+        ]
+
+        seller_content = None
+        if request.seller_domain:
+            seller_domain = normalize_domain(request.seller_domain)
+            logger.info(f"Also fetching seller website: {seller_domain}")
+            fetch_tasks.append(fetch_website(seller_domain))
+
+        results = await asyncio.gather(*fetch_tasks)
+
+        website_result = results[0]
+        news_result = results[1]
+        github_result = results[2]
+
+        if request.seller_domain and len(results) > 3:
+            seller_result = results[3]
+            if seller_result.fetched:
+                seller_content = seller_result.content
 
         if not website_result.fetched:
             elapsed = int((time.time() - start_time) * 1000)
@@ -225,6 +266,7 @@ async def compare_emails(request: CompareRequest):
             news_result=news_result,
             github_result=github_result,
             selling=request.selling,
+            seller_content=seller_content,
         )
 
         # Step 2: Generate both emails in parallel

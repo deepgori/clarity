@@ -173,6 +173,7 @@ async def synthesize_intelligence(
     news_result: SourceResult,
     github_result: SourceResult,
     selling: str | None = None,
+    seller_content: str | None = None,
 ) -> CompanyIntelligence:
     """
     Synthesize raw source data into structured company intelligence.
@@ -186,7 +187,18 @@ async def synthesize_intelligence(
     github_content = github_result.content if github_result.fetched else "No GitHub presence found."
 
     selling_context = ""
-    if selling:
+    if seller_content:
+        # We have actual data about the seller's product
+        selling_context = (
+            f"\n=== SELLER'S PRODUCT (from their website) ===\n"
+            f"{seller_content}\n"
+            f"=== END SELLER DATA ===\n"
+            f"(Match the seller's specific capabilities against the target company's needs. "
+            f"Reference actual features from the seller's product in the sales strategy.)\n"
+        )
+        if selling:
+            selling_context += f"\nAdditional context from the seller: {selling}\n"
+    elif selling:
         selling_context = f"\nWHAT WE'RE SELLING: {selling}\n(Tailor the sales strategy to pitch this specific product/service)\n"
 
     user_prompt = SYNTHESIS_USER_PROMPT.format(

@@ -421,10 +421,11 @@
     <section class="input-section">
         <div class="input-group">
             <div class="input-row">
-                <input type="text" id="domain-input" placeholder="Company domain (e.g., stripe.com)">
+                <input type="text" id="domain-input" placeholder="Target company (e.g., stripe.com)">
                 <button class="btn-analyze" id="analyze-btn" onclick="runAnalysis()">Analyze</button>
             </div>
             <input type="text" class="selling-input" id="selling-input" placeholder="What are you selling? (e.g., an API monitoring platform)">
+            <input type="text" class="selling-input" id="seller-input" placeholder="Your company domain (optional, for better pitch matching)">
         </div>
     </section>
 
@@ -463,21 +464,22 @@
     <script>
         const domainInput = document.getElementById('domain-input');
         const sellingInput = document.getElementById('selling-input');
+        const sellerInput = document.getElementById('seller-input');
         const analyzeBtn = document.getElementById('analyze-btn');
         const statusEl = document.getElementById('status');
         const resultsEl = document.getElementById('results');
 
         // Allow Enter key to trigger analysis
-        domainInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') runAnalysis();
-        });
-        sellingInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') runAnalysis();
+        [domainInput, sellingInput, sellerInput].forEach(el => {
+            el.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') runAnalysis();
+            });
         });
 
         async function runAnalysis() {
             const domain = domainInput.value.trim();
             const selling = sellingInput.value.trim();
+            const sellerDomain = sellerInput.value.trim();
 
             if (!domain) {
                 domainInput.focus();
@@ -494,13 +496,19 @@
             resultsEl.classList.remove('visible');
             statusEl.style.display = 'block';
             statusEl.className = 'status-msg';
-            statusEl.textContent = 'Fetching data from website, news, and GitHub...';
+            const fetchingMsg = sellerDomain
+                ? 'Researching both companies in parallel...'
+                : 'Fetching data from website, news, and GitHub...';
+            statusEl.textContent = fetchingMsg;
 
             try {
+                const body = { domain, selling };
+                if (sellerDomain) body.seller_domain = sellerDomain;
+
                 const response = await fetch('/api/compare', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ domain, selling }),
+                    body: JSON.stringify(body),
                 });
 
                 const data = await response.json();

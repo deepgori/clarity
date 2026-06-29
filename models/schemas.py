@@ -108,7 +108,11 @@ class ClarityRequest(BaseModel):
     domain: str = Field(description="Company domain to analyze, e.g., 'stripe.com'")
     selling: Optional[str] = Field(
         default=None,
-        description="What you're selling (optional, improves pitch angle)"
+        description="What you're selling (short description, used if seller_domain not provided)"
+    )
+    seller_domain: Optional[str] = Field(
+        default=None,
+        description="Your company's domain. Clarity will research your product too for better pitch matching."
     )
 
 
