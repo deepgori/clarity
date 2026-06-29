@@ -120,5 +120,6 @@ class ClarityResponse(BaseModel):
     """API response wrapper."""
     success: bool
     intelligence: Optional[CompanyIntelligence] = None
+    suggested_email: Optional[str] = None
     error: Optional[str] = None
     processing_time_ms: int = Field(description="Total processing time in milliseconds")

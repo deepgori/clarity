@@ -174,12 +174,25 @@ async def analyze_company(request: ClarityRequest):
             context=request.context,
         )
 
+        # Phase 3: Generate suggested outreach email
+        selling_desc = "our product"
+        if seller_content:
+            selling_desc = seller_content[:300].strip()
+        if request.context:
+            selling_desc = request.context
+
+        suggested_email = await generate_clarity_email(
+            intelligence=intelligence,
+            selling=selling_desc,
+        )
+
         elapsed = int((time.time() - start_time) * 1000)
         logger.info(f"Complete: {domain} in {elapsed}ms")
 
         return ClarityResponse(
             success=True,
             intelligence=intelligence,
+            suggested_email=suggested_email,
             processing_time_ms=elapsed,
         )
 

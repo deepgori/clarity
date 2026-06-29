@@ -418,6 +418,64 @@
             flex-shrink: 0;
         }
 
+        /* Suggested email */
+        .email-section {
+            margin-top: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 10px;
+            padding: 20px;
+            display: none;
+        }
+
+        .email-section.visible {
+            display: block;
+        }
+
+        .email-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+
+        .email-header h3 {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #6366f1;
+        }
+
+        .btn-copy {
+            padding: 5px 12px;
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.25);
+            border-radius: 6px;
+            color: #818cf8;
+            font-size: 12px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-copy:hover {
+            background: rgba(99, 102, 241, 0.2);
+        }
+
+        .btn-copy.copied {
+            background: rgba(34, 197, 94, 0.1);
+            border-color: rgba(34, 197, 94, 0.25);
+            color: #22c55e;
+        }
+
+        .email-body {
+            font-size: 13px;
+            line-height: 1.7;
+            color: #ccc;
+            white-space: pre-wrap;
+        }
+
         @media (max-width: 768px) {
             .intel-grid {
                 grid-template-columns: 1fr;
@@ -469,6 +527,13 @@
         <div class="company-header" id="company-header"></div>
         <div id="relevance-banner"></div>
         <div class="intel-grid" id="intel-grid"></div>
+        <div class="email-section" id="email-section">
+            <div class="email-header">
+                <h3>Suggested Outreach</h3>
+                <button class="btn-copy" id="copy-btn" onclick="copyEmail()">Copy</button>
+            </div>
+            <div class="email-body" id="email-body"></div>
+        </div>
     </section>
 
     <script>
@@ -657,6 +722,29 @@
                     <p style="margin-top:8px;font-size:12px;color:#666;">Sources: ${intel.sources_used.length} pages | Freshness: ${intel.data_freshness}</p>
                 </div>
             `;
+
+            // Suggested outreach email
+            const emailSection = document.getElementById('email-section');
+            const emailBody = document.getElementById('email-body');
+            if (data.suggested_email) {
+                emailBody.textContent = data.suggested_email;
+                emailSection.classList.add('visible');
+            } else {
+                emailSection.classList.remove('visible');
+            }
+        }
+
+        function copyEmail() {
+            const emailBody = document.getElementById('email-body');
+            const copyBtn = document.getElementById('copy-btn');
+            navigator.clipboard.writeText(emailBody.textContent).then(() => {
+                copyBtn.textContent = 'Copied';
+                copyBtn.classList.add('copied');
+                setTimeout(() => {
+                    copyBtn.textContent = 'Copy';
+                    copyBtn.classList.remove('copied');
+                }, 2000);
+            });
         }
     </script>
 </body>
