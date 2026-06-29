@@ -172,8 +172,8 @@ async def synthesize_intelligence(
     website_result: SourceResult,
     news_result: SourceResult,
     github_result: SourceResult,
-    selling: str | None = None,
     seller_content: str | None = None,
+    context: str | None = None,
 ) -> CompanyIntelligence:
     """
     Synthesize raw source data into structured company intelligence.
@@ -188,18 +188,23 @@ async def synthesize_intelligence(
 
     selling_context = ""
     if seller_content:
-        # We have actual data about the seller's product
+        # We have actual data about the seller's product from their website
         selling_context = (
-            f"\n=== SELLER'S PRODUCT (from their website) ===\n"
+            f"\n=== SELLER'S COMPANY (auto-extracted from their website) ===\n"
             f"{seller_content}\n"
-            f"=== END SELLER DATA ===\n"
-            f"(Match the seller's specific capabilities against the target company's needs. "
-            f"Reference actual features from the seller's product in the sales strategy.)\n"
+            f"=== END SELLER DATA ===\n\n"
+            f"INSTRUCTIONS FOR RELEVANCE AND STRATEGY:\n"
+            f"1. First, understand what the seller actually does from their website.\n"
+            f"2. Evaluate relevance in BOTH directions:\n"
+            f"   - Is the seller's product useful to the target company?\n"
+            f"   - Is the target company the right type of customer for the seller?\n"
+            f"3. Match SPECIFIC seller features against SPECIFIC target needs.\n"
+            f"4. If the seller's product has nothing to do with the target, score relevance low.\n"
         )
-        if selling:
-            selling_context += f"\nAdditional context from the seller: {selling}\n"
-    elif selling:
-        selling_context = f"\nWHAT WE'RE SELLING: {selling}\n(Tailor the sales strategy to pitch this specific product/service)\n"
+        if context:
+            selling_context += f"\nAdditional context from the seller: {context}\n"
+    elif context:
+        selling_context = f"\nCONTEXT: {context}\n"
 
     user_prompt = SYNTHESIS_USER_PROMPT.format(
         domain=domain,

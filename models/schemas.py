@@ -105,14 +105,14 @@ class CompanyIntelligence(BaseModel):
 
 class ClarityRequest(BaseModel):
     """API request body."""
-    domain: str = Field(description="Company domain to analyze, e.g., 'stripe.com'")
-    selling: Optional[str] = Field(
-        default=None,
-        description="What you're selling (short description, used if seller_domain not provided)"
-    )
+    domain: str = Field(description="Target company domain to analyze, e.g., 'stripe.com'")
     seller_domain: Optional[str] = Field(
         default=None,
-        description="Your company's domain. Clarity will research your product too for better pitch matching."
+        description="Your company's domain. Clarity will fetch your website to understand what you sell."
+    )
+    context: Optional[str] = Field(
+        default=None,
+        description="Optional extra context (e.g., 'focus on their enterprise tier', 'we just launched a new feature')"
     )
 
 

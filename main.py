@@ -170,8 +170,8 @@ async def analyze_company(request: ClarityRequest):
             website_result=website_result,
             news_result=news_result,
             github_result=github_result,
-            selling=request.selling,
             seller_content=seller_content,
+            context=request.context,
         )
 
         elapsed = int((time.time() - start_time) * 1000)
@@ -195,11 +195,11 @@ async def analyze_company(request: ClarityRequest):
 
 class CompareRequest(BaseModel):
     """Request for side-by-side email comparison."""
-    domain: str = Field(description="Company domain to analyze")
-    selling: str = Field(description="What you're selling")
-    seller_domain: Optional[str] = Field(
+    domain: str = Field(description="Target company domain")
+    seller_domain: str = Field(description="Your company's domain")
+    context: Optional[str] = Field(
         default=None,
-        description="Your company's domain for better pitch matching"
+        description="Optional extra context"
     )
 
 
@@ -265,20 +265,28 @@ async def compare_emails(request: CompareRequest):
             website_result=website_result,
             news_result=news_result,
             github_result=github_result,
-            selling=request.selling,
             seller_content=seller_content,
+            context=request.context,
         )
+
+        # Build a selling description from seller content for email generation
+        selling_desc = "our product"
+        if seller_content:
+            # Use the first 200 chars of seller content as a brief description
+            selling_desc = seller_content[:200].strip()
+        if request.context:
+            selling_desc = request.context
 
         # Step 2: Generate both emails in parallel
         generic_email, clarity_email = await asyncio.gather(
             generate_generic_email(
                 company_name=intelligence.company_name,
                 domain=domain,
-                selling=request.selling,
+                selling=selling_desc,
             ),
             generate_clarity_email(
                 intelligence=intelligence,
-                selling=request.selling,
+                selling=selling_desc,
             ),
         )
 

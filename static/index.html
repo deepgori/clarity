@@ -421,11 +421,11 @@
     <section class="input-section">
         <div class="input-group">
             <div class="input-row">
-                <input type="text" id="domain-input" placeholder="Target company (e.g., stripe.com)">
+                <input type="text" id="domain-input" placeholder="Target company (e.g., datadog.com)">
                 <button class="btn-analyze" id="analyze-btn" onclick="runAnalysis()">Analyze</button>
             </div>
-            <input type="text" class="selling-input" id="selling-input" placeholder="What are you selling? (e.g., an API monitoring platform)">
-            <input type="text" class="selling-input" id="seller-input" placeholder="Your company domain (optional, for better pitch matching)">
+            <input type="text" class="selling-input" id="seller-input" placeholder="Your company domain (e.g., sentry.io)">
+            <input type="text" class="selling-input" id="context-input" placeholder="Extra context (optional, e.g., 'focus on their enterprise tier')">
         </div>
     </section>
 
@@ -463,14 +463,14 @@
 
     <script>
         const domainInput = document.getElementById('domain-input');
-        const sellingInput = document.getElementById('selling-input');
         const sellerInput = document.getElementById('seller-input');
+        const contextInput = document.getElementById('context-input');
         const analyzeBtn = document.getElementById('analyze-btn');
         const statusEl = document.getElementById('status');
         const resultsEl = document.getElementById('results');
 
         // Allow Enter key to trigger analysis
-        [domainInput, sellingInput, sellerInput].forEach(el => {
+        [domainInput, sellerInput, contextInput].forEach(el => {
             el.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') runAnalysis();
             });
@@ -478,15 +478,15 @@
 
         async function runAnalysis() {
             const domain = domainInput.value.trim();
-            const selling = sellingInput.value.trim();
             const sellerDomain = sellerInput.value.trim();
+            const context = contextInput.value.trim();
 
             if (!domain) {
                 domainInput.focus();
                 return;
             }
-            if (!selling) {
-                sellingInput.focus();
+            if (!sellerDomain) {
+                sellerInput.focus();
                 return;
             }
 
@@ -496,14 +496,11 @@
             resultsEl.classList.remove('visible');
             statusEl.style.display = 'block';
             statusEl.className = 'status-msg';
-            const fetchingMsg = sellerDomain
-                ? 'Researching both companies in parallel...'
-                : 'Fetching data from website, news, and GitHub...';
-            statusEl.textContent = fetchingMsg;
+            statusEl.textContent = 'Researching both companies in parallel...';
 
             try {
-                const body = { domain, selling };
-                if (sellerDomain) body.seller_domain = sellerDomain;
+                const body = { domain, seller_domain: sellerDomain };
+                if (context) body.context = context;
 
                 const response = await fetch('/api/compare', {
                     method: 'POST',
