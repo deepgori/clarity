@@ -9,11 +9,14 @@ import asyncio
 import time
 import logging
 import sys
+from pathlib import Path
 from contextlib import asynccontextmanager
 
 from pydantic import BaseModel, Field
 from typing import Optional
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
@@ -63,6 +66,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Serve static files
+STATIC_DIR = Path(__file__).parent / "static"
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+
+
+@app.get("/")
+async def serve_frontend():
+    """Serve the demo frontend."""
+    return FileResponse(str(STATIC_DIR / "index.html"))
 
 
 @app.get("/health")
