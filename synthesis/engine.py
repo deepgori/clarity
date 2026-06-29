@@ -39,11 +39,21 @@ CRITICAL INSTRUCTIONS:
    Every signal must cite a specific source. Never fabricate information.
    If data is insufficient, say so. Don't guess.
 
-3. SALES STRATEGY MUST BE ACTIONABLE:
+3. RELEVANCE SCORING (Critical):
+   If the user specifies what they're selling, honestly evaluate whether it's a
+   good fit for this company. Score 0-1:
+   - 0.8+: Strong natural fit, clear use case
+   - 0.5-0.8: Some relevance, would require creative positioning
+   - 0.2-0.5: Weak fit, unlikely to close
+   - <0.2: Completely irrelevant, don't waste their time
+   Be blunt. If someone is trying to sell a shopping website to a cloud monitoring
+   company, say so. Don't invent fake reasons for relevance.
+
+4. SALES STRATEGY MUST BE ACTIONABLE:
    Don't say generic things like "build a relationship." Say specific things like 
    "Their CTO blogged about microservices migration, reference this in your opening."
 
-4. CONFIDENCE SCORING:
+5. CONFIDENCE SCORING:
    Rate overall confidence 0-1 based on data quality:
    - 0.9+: Multiple sources, consistent data, rich content
    - 0.7-0.9: Good data but some gaps
@@ -119,6 +129,8 @@ INTELLIGENCE_SCHEMA = {
         "sales_strategy": {
             "type": "object",
             "properties": {
+                "relevance_score": {"type": "number"},
+                "relevance_reasoning": {"type": "string"},
                 "recommended_angle": {"type": "string"},
                 "conversation_starter": {"type": "string"},
                 "avoid_topics": {
@@ -128,7 +140,7 @@ INTELLIGENCE_SCHEMA = {
                 "timing_assessment": {"type": "string"},
                 "decision_maker_profile": {"type": "string"},
             },
-            "required": ["recommended_angle", "conversation_starter", "avoid_topics", "timing_assessment", "decision_maker_profile"],
+            "required": ["relevance_score", "relevance_reasoning", "recommended_angle", "conversation_starter", "avoid_topics", "timing_assessment", "decision_maker_profile"],
             "additionalProperties": False,
         },
         "tech_stack": {

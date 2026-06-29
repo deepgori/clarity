@@ -55,6 +55,13 @@ class Contradiction(BaseModel):
 
 class SalesStrategy(BaseModel):
     """Typed decision object an AI agent can branch on programmatically."""
+    relevance_score: float = Field(
+        ge=0.0, le=1.0,
+        description="How relevant is what we're selling to this company? 0 = completely irrelevant, 1 = perfect fit"
+    )
+    relevance_reasoning: str = Field(
+        description="Why this product is or isn't a good fit for this company. Be honest when it's a bad match."
+    )
     recommended_angle: str = Field(description="The best approach to pitch this company")
     conversation_starter: str = Field(description="A specific, relevant opening line")
     avoid_topics: list[str] = Field(description="Topics or approaches that would backfire")

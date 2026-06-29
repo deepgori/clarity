@@ -435,6 +435,7 @@
             <h2 id="results-title"></h2>
             <span class="results-meta" id="results-meta"></span>
         </div>
+        <div id="relevance-banner" style="display:none;margin-bottom:20px;padding:16px;border-radius:8px;"></div>
 
         <div class="email-comparison">
             <div class="email-card generic">
@@ -536,6 +537,29 @@
             document.getElementById('generic-email').textContent = data.generic_email;
             document.getElementById('clarity-email').textContent = data.clarity_email;
 
+            // Relevance banner
+            const banner = document.getElementById('relevance-banner');
+            const strat = intel.sales_strategy;
+            if (strat.relevance_score !== undefined) {
+                banner.style.display = 'block';
+                const score = strat.relevance_score;
+                if (score < 0.3) {
+                    banner.style.background = 'rgba(239, 68, 68, 0.1)';
+                    banner.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+                    banner.innerHTML = `<span style="color:#ef4444;font-weight:600;">Low Relevance (${(score*100).toFixed(0)}%)</span><br><span style="font-size:13px;color:#ccc;">${strat.relevance_reasoning}</span>`;
+                } else if (score < 0.6) {
+                    banner.style.background = 'rgba(251, 191, 36, 0.08)';
+                    banner.style.border = '1px solid rgba(251, 191, 36, 0.25)';
+                    banner.innerHTML = `<span style="color:#fbbf24;font-weight:600;">Weak Fit (${(score*100).toFixed(0)}%)</span><br><span style="font-size:13px;color:#ccc;">${strat.relevance_reasoning}</span>`;
+                } else {
+                    banner.style.background = 'rgba(34, 197, 94, 0.08)';
+                    banner.style.border = '1px solid rgba(34, 197, 94, 0.25)';
+                    banner.innerHTML = `<span style="color:#22c55e;font-weight:600;">Good Fit (${(score*100).toFixed(0)}%)</span><br><span style="font-size:13px;color:#ccc;">${strat.relevance_reasoning}</span>`;
+                }
+            } else {
+                banner.style.display = 'none';
+            }
+
             // Intelligence grid
             const grid = document.getElementById('intel-grid');
             grid.innerHTML = '';
@@ -561,8 +585,8 @@
                 </div>
             `;
 
+
             // Sales strategy
-            const strat = intel.sales_strategy;
             grid.innerHTML += `
                 <div class="intel-section">
                     <h4>Sales Strategy</h4>
