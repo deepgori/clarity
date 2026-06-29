@@ -16,16 +16,28 @@ GITHUB_API_BASE = "https://api.github.com"
 REQUEST_TIMEOUT = 10.0
 
 
-def _get_headers() -> dict:
+def _get_headers(use_auth: bool = True) -> dict:
     """Build GitHub API headers, with auth token if available."""
     headers = {
         "Accept": "application/vnd.github.v3+json",
         "User-Agent": "ClarityBot/1.0",
     }
-    token = os.getenv("GITHUB_TOKEN", "").strip()
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
+    if use_auth:
+        # Use CLARITY_GITHUB_TOKEN to avoid picking up invalid system tokens
+        token = os.getenv("CLARITY_GITHUB_TOKEN", "").strip()
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
     return headers
+
+
+async def _github_get(url: str, client: httpx.AsyncClient, **kwargs) -> httpx.Response:
+    """Make a GitHub API request. Retries without auth if we get a 401."""
+    response = await client.get(url, headers=_get_headers(), timeout=REQUEST_TIMEOUT, **kwargs)
+    if response.status_code == 401:
+        # Token is invalid, retry without auth (60 req/hr unauthenticated)
+        logger.info("GitHub token invalid, retrying without auth")
+        response = await client.get(url, headers=_get_headers(use_auth=False), timeout=REQUEST_TIMEOUT, **kwargs)
+    return response
 
 
 async def _find_org(domain: str, client: httpx.AsyncClient) -> str | None:
@@ -34,20 +46,12 @@ async def _find_org(domain: str, client: httpx.AsyncClient) -> str | None:
     org_guess = domain.split(".")[0]
 
     # Check if the org exists
-    response = await client.get(
-        f"{GITHUB_API_BASE}/orgs/{org_guess}",
-        headers=_get_headers(),
-        timeout=REQUEST_TIMEOUT,
-    )
+    response = await _github_get(f"{GITHUB_API_BASE}/orgs/{org_guess}", client)
     if response.status_code == 200:
         return org_guess
 
     # Also try as a user (some companies use user accounts)
-    response = await client.get(
-        f"{GITHUB_API_BASE}/users/{org_guess}",
-        headers=_get_headers(),
-        timeout=REQUEST_TIMEOUT,
-    )
+    response = await _github_get(f"{GITHUB_API_BASE}/users/{org_guess}", client)
     if response.status_code == 200:
         return org_guess
 
@@ -56,21 +60,17 @@ async def _find_org(domain: str, client: httpx.AsyncClient) -> str | None:
 
 async def _get_top_repos(org: str, client: httpx.AsyncClient) -> list[dict]:
     """Get top repos by stars for an org."""
-    response = await client.get(
-        f"{GITHUB_API_BASE}/orgs/{org}/repos",
-        headers=_get_headers(),
+    response = await _github_get(
+        f"{GITHUB_API_BASE}/orgs/{org}/repos", client,
         params={"sort": "stars", "direction": "desc", "per_page": 5, "type": "public"},
-        timeout=REQUEST_TIMEOUT,
     )
     if response.status_code == 200:
         return response.json()
 
     # Try as user repos if org endpoint fails
-    response = await client.get(
-        f"{GITHUB_API_BASE}/users/{org}/repos",
-        headers=_get_headers(),
+    response = await _github_get(
+        f"{GITHUB_API_BASE}/users/{org}/repos", client,
         params={"sort": "stars", "direction": "desc", "per_page": 5, "type": "public"},
-        timeout=REQUEST_TIMEOUT,
     )
     if response.status_code == 200:
         return response.json()
@@ -80,10 +80,8 @@ async def _get_top_repos(org: str, client: httpx.AsyncClient) -> list[dict]:
 
 async def _get_languages(repo_full_name: str, client: httpx.AsyncClient) -> dict:
     """Get language breakdown for a repo."""
-    response = await client.get(
-        f"{GITHUB_API_BASE}/repos/{repo_full_name}/languages",
-        headers=_get_headers(),
-        timeout=REQUEST_TIMEOUT,
+    response = await _github_get(
+        f"{GITHUB_API_BASE}/repos/{repo_full_name}/languages", client,
     )
     if response.status_code == 200:
         return response.json()
