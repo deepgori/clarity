@@ -6,6 +6,7 @@ One API call, parallel source fetching, structured JSON output.
 """
 
 import asyncio
+import os
 import time
 import logging
 import sys
@@ -14,7 +15,8 @@ from contextlib import asynccontextmanager
 
 from pydantic import BaseModel, Field
 from typing import Optional
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends, HTTPException, Security
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -26,6 +28,7 @@ from sources.news import fetch_news
 from sources.github import fetch_github
 from synthesis.engine import synthesize_intelligence
 from agent import generate_generic_email, generate_clarity_email
+from cache import get_cached, set_cached
 
 # Load environment variables
 load_dotenv()
@@ -81,6 +84,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# API key auth (optional, only enforced if CLARITY_API_KEY is set)
+security = HTTPBearer(auto_error=False)
+
+
+async def verify_api_key(
+    credentials: HTTPAuthorizationCredentials = Security(security),
+) -> str | None:
+    """Check API key if one is configured. Skip auth if no key is set."""
+    expected_key = os.getenv("CLARITY_API_KEY", "").strip()
+    if not expected_key:
+        return None  # No key configured, allow all requests
+
+    if not credentials or credentials.credentials != expected_key:
+        raise HTTPException(status_code=401, detail="Invalid API key")
+    return credentials.credentials
+
 # Serve static files
 STATIC_DIR = Path(__file__).parent / "static"
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
@@ -99,23 +118,28 @@ async def health_check():
 
 
 @app.post("/api/company", response_model=ClarityResponse)
-async def analyze_company(request: ClarityRequest):
+async def analyze_company(
+    request: ClarityRequest,
+    _key: str | None = Depends(verify_api_key),
+):
     """
     Analyze a company and return structured intelligence.
 
     Fetches data from website, news, and GitHub in parallel,
     then synthesizes everything through OpenAI with contradiction detection.
-
-    Args:
-        request: ClarityRequest with domain and optional selling context
-
-    Returns:
-        ClarityResponse with structured intelligence or error
     """
     start_time = time.time()
     domain = normalize_domain(request.domain)
+    seller_domain_str = normalize_domain(request.seller_domain) if request.seller_domain else None
 
     logger.info(f"Analyzing: {domain}")
+
+    # Check cache first
+    cached = get_cached(domain, seller_domain_str, request.context)
+    if cached:
+        elapsed = int((time.time() - start_time) * 1000)
+        cached["processing_time_ms"] = elapsed
+        return ClarityResponse(**cached)
 
     try:
         # Phase 1: Parallel source fetching (target company)
@@ -189,12 +213,17 @@ async def analyze_company(request: ClarityRequest):
         elapsed = int((time.time() - start_time) * 1000)
         logger.info(f"Complete: {domain} in {elapsed}ms")
 
-        return ClarityResponse(
+        response_data = ClarityResponse(
             success=True,
             intelligence=intelligence,
             suggested_email=suggested_email,
             processing_time_ms=elapsed,
         )
+
+        # Cache the successful response
+        set_cached(domain, response_data.model_dump(), seller_domain_str, request.context)
+
+        return response_data
 
     except Exception as e:
         elapsed = int((time.time() - start_time) * 1000)

@@ -1,132 +1,118 @@
 # Clarity
 
-Company intelligence API for AI sales agents.
+Company intelligence API for sales teams and AI agents. One API call returns structured intelligence about any company, including signals, contradictions, tech stack, hiring patterns, and a personalized outreach email.
 
-Clarity takes a company domain, pulls data from their website, news, and GitHub in parallel, then synthesizes structured intelligence through an LLM. The output is a JSON object designed for programmatic consumption by autonomous agents, not for human dashboards.
+## What it does
 
-The key feature is **contradiction detection**: Clarity runs a single reasoning pass across all sources to catch conflicts that parallel enrichment tools miss (e.g., a company's website claims "API-first" but their GitHub repos are all gRPC-based).
+Clarity takes a target company domain and your company domain, researches both in parallel, and returns:
 
-## Quick Start
+- **Company profile** with industry, stage, and description
+- **Sales signals** with implications (e.g., "just raised Series C" -> "budget available for new tooling")
+- **Contradiction detection** between what the company says and what evidence shows
+- **Tech stack** extracted from GitHub repos
+- **Hiring patterns** and what they imply about priorities
+- **Bidirectional relevance scoring** (is your product relevant to them? are they the right customer for you?)
+- **Suggested outreach email** that references specific findings
+
+## Quick start
 
 ```bash
 # Clone and set up
-git clone https://github.com/yourusername/clarity.git
+git clone https://github.com/deepgori/clarity.git
 cd clarity
-python3 -m venv venv
+python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 
-# Add your API keys
+# Configure
 cp .env.example .env
-# Edit .env and add your OPENAI_API_KEY
+# Add your OpenAI API key to .env
 
-# Run the server
+# Run
 python main.py
+# Open http://localhost:8000
 ```
 
-## Usage
+## API
+
+### POST /api/company
+
+Analyze a company and return structured intelligence.
 
 ```bash
 curl -X POST http://localhost:8000/api/company \
   -H "Content-Type: application/json" \
-  -d '{"domain": "stripe.com", "selling": "a real-time analytics platform"}'
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -d '{
+    "domain": "datadog.com",
+    "seller_domain": "sentry.io",
+    "context": "focus on their enterprise monitoring gaps"
+  }'
 ```
 
-The `selling` field is optional. When provided, the sales strategy in the response will be tailored to pitching that specific product.
+**Request fields:**
+| Field | Required | Description |
+|-------|----------|-------------|
+| `domain` | Yes | Target company domain |
+| `seller_domain` | No | Your company domain (Clarity auto-extracts what you sell) |
+| `context` | No | Extra context for the analysis |
 
-## API Response
-
+**Response:**
 ```json
 {
   "success": true,
   "intelligence": {
-    "company_name": "Stripe",
-    "what_they_do": "Financial infrastructure for businesses",
-    "industry": "Financial Technology",
-    "stage": "Growth",
-    "signals": [
-      {
-        "signal": "Processes $1.9 trillion in payments volume",
-        "implication": "Large-scale data needs, good fit for analytics tooling",
-        "source_url": "https://stripe.com/",
-        "confidence": 0.9
-      }
-    ],
-    "contradictions": [
-      {
-        "claim_a": "Website claims enterprise-ready security",
-        "source_a": "https://stripe.com/",
-        "claim_b": "Recent news reports a third-party security breach",
-        "source_b": "https://news.example.com/...",
-        "resolution": "Breach was via a third-party tool, not core infrastructure",
-        "sales_implication": "Avoid leading with security claims in outreach"
-      }
-    ],
+    "company_name": "Datadog",
+    "domain": "datadog.com",
+    "what_they_do": "Cloud monitoring and security platform...",
+    "industry": "Cloud Infrastructure / DevOps",
+    "stage": "Public (NASDAQ: DDOG)",
+    "signals": [...],
+    "contradictions": [...],
+    "tech_stack": ["Go", "Python", "TypeScript", ...],
+    "hiring_signals": [...],
     "sales_strategy": {
       "recommended_angle": "...",
-      "conversation_starter": "...",
-      "avoid_topics": ["..."],
-      "timing_assessment": "...",
-      "decision_maker_profile": "..."
+      "relevance_score": 0.85,
+      "relevance_reasoning": "..."
     },
-    "tech_stack": ["Ruby", "Go", "React"],
-    "overall_confidence": 0.85
+    "overall_confidence": 0.9
   },
-  "processing_time_ms": 11500
+  "suggested_email": "...",
+  "processing_time_ms": 12000
 }
 ```
+
+### POST /api/compare
+
+Same as `/api/company` but also generates a generic email for side-by-side comparison.
 
 ## Architecture
 
 ```
-Input: domain
-    |
-    v
-+---------------------------+
-|   FastAPI Orchestrator     |
-|   (asyncio.gather)        |
-+--+--------+--------+------+
-   |        |        |
-   v        v        v
-Website   News    GitHub
-(Jina)   (DDG)    (API)
-   |        |        |
-   +--------+--------+
-            |
-            v
-+---------------------------+
-|  OpenAI Structured Output |
-|  (contradiction detection)|
-+---------------------------+
-            |
-            v
-    Structured JSON Response
+Request -> Parallel fetch (website + news + GitHub + seller) -> AI synthesis -> Response
 ```
 
 **Data sources:**
-- **Website**: Jina Reader (primary, handles SPAs) with trafilatura fallback
-- **News**: DuckDuckGo search (primary) with NewsAPI.org fallback
-- **GitHub**: REST API for org repos and language analysis
+- Website content via Jina Reader (with trafilatura fallback)
+- News via DuckDuckGo (with NewsAPI fallback)
+- GitHub repos, languages, and org data via GitHub API
+- Seller website for bidirectional matching
 
-All sources are fetched in parallel. Each has a coded fallback path so a single source failure doesn't break the response.
+**AI layer:**
+- GPT-4o with structured JSON output for intelligence synthesis
+- GPT-4o for personalized email generation
+- Contradiction detection across data sources
+- Bidirectional relevance scoring
 
 ## Configuration
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `OPENAI_API_KEY` | Yes | OpenAI API key for GPT-4o synthesis |
-| `GITHUB_TOKEN` | No | GitHub PAT for higher rate limits (5000/hr vs 60/hr) |
-| `NEWS_API_KEY` | No | NewsAPI.org key for news fallback |
-
-## Tech Stack
-
-- Python 3.12+
-- FastAPI + Uvicorn
-- httpx (async HTTP)
-- OpenAI (structured output)
-- Jina Reader + trafilatura (web content extraction)
-- DuckDuckGo search + NewsAPI (news)
-- GitHub REST API
+| `OPENAI_API_KEY` | Yes | OpenAI API key |
+| `CLARITY_API_KEY` | No | API key for authentication (if not set, auth is disabled) |
+| `CLARITY_GITHUB_TOKEN` | No | GitHub token for higher rate limits |
+| `NEWS_API_KEY` | No | NewsAPI key for news fallback |
 
 ## License
 
