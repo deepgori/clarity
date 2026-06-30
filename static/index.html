@@ -476,6 +476,70 @@
             white-space: pre-wrap;
         }
 
+        /* Feedback */
+        .feedback-section {
+            margin-top: 24px;
+            padding: 20px 24px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            display: none;
+            text-align: center;
+        }
+
+        .feedback-section.visible {
+            display: block;
+        }
+
+        .feedback-section p {
+            font-size: 14px;
+            color: #999;
+            margin-bottom: 12px;
+        }
+
+        .feedback-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .feedback-btn {
+            padding: 8px 24px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.03);
+            color: #ccc;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .feedback-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .feedback-btn.selected-up {
+            background: rgba(34, 197, 94, 0.1);
+            border-color: rgba(34, 197, 94, 0.3);
+            color: #22c55e;
+        }
+
+        .feedback-btn.selected-down {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+        }
+
+        .feedback-thanks {
+            display: none;
+            font-size: 13px;
+            color: #22c55e;
+        }
+
         @media (max-width: 768px) {
             .intel-grid {
                 grid-template-columns: 1fr;
@@ -533,6 +597,14 @@
                 <button class="btn-copy" id="copy-btn" onclick="copyEmail()">Copy</button>
             </div>
             <div class="email-body" id="email-body"></div>
+        </div>
+        <div class="feedback-section" id="feedback-section">
+            <p>Was this analysis useful?</p>
+            <div class="feedback-buttons" id="feedback-buttons">
+                <button class="feedback-btn" onclick="sendFeedback('up')">&#128077; Useful</button>
+                <button class="feedback-btn" onclick="sendFeedback('down')">&#128078; Not useful</button>
+            </div>
+            <div class="feedback-thanks" id="feedback-thanks">Thanks for your feedback!</div>
         </div>
     </section>
 
@@ -732,6 +804,20 @@
             } else {
                 emailSection.classList.remove('visible');
             }
+
+            // Show feedback section
+            const feedbackSection = document.getElementById('feedback-section');
+            const feedbackButtons = document.getElementById('feedback-buttons');
+            const feedbackThanks = document.getElementById('feedback-thanks');
+            feedbackSection.classList.add('visible');
+            feedbackButtons.style.display = 'flex';
+            feedbackThanks.style.display = 'none';
+            // Reset button states
+            feedbackSection.querySelectorAll('.feedback-btn').forEach(btn => {
+                btn.className = 'feedback-btn';
+            });
+            // Store domain for feedback
+            window._lastAnalyzedDomain = intel.domain;
         }
 
         function copyEmail() {
@@ -745,6 +831,33 @@
                     copyBtn.classList.remove('copied');
                 }, 2000);
             });
+        }
+        function sendFeedback(rating) {
+            const domain = window._lastAnalyzedDomain || '';
+            if (!domain) return;
+
+            fetch('/api/feedback', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ domain, rating }),
+            });
+
+            // Update UI
+            const buttons = document.querySelectorAll('.feedback-btn');
+            buttons.forEach(btn => {
+                btn.className = 'feedback-btn';
+            });
+            if (rating === 'up') {
+                buttons[0].classList.add('selected-up');
+            } else {
+                buttons[1].classList.add('selected-down');
+            }
+
+            // Show thanks after a moment
+            setTimeout(() => {
+                document.getElementById('feedback-buttons').style.display = 'none';
+                document.getElementById('feedback-thanks').style.display = 'block';
+            }, 600);
         }
     </script>
 </body>

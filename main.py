@@ -30,6 +30,7 @@ from synthesis.engine import synthesize_intelligence
 from agent import generate_generic_email, generate_clarity_email
 from cache import get_cached, set_cached
 from security import rate_limiter, validate_domain
+from analytics import log_request, log_feedback, get_analytics_summary
 
 # Load environment variables
 load_dotenv()
@@ -134,6 +135,28 @@ async def get_costs(_key: str | None = Depends(verify_api_key)):
     """Get cumulative OpenAI spend stats. Requires API key."""
     from costs import cost_tracker
     return cost_tracker.get_summary()
+
+
+@app.get("/stats")
+async def get_stats():
+    """Get public usage and feedback stats."""
+    return get_analytics_summary()
+
+
+class FeedbackRequest(BaseModel):
+    """User feedback on analysis quality."""
+    domain: str = Field(description="Domain that was analyzed")
+    rating: str = Field(description="'up' or 'down'")
+
+
+@app.post("/api/feedback")
+async def submit_feedback(feedback: FeedbackRequest, http_request: Request):
+    """Record thumbs up/down feedback on analysis quality."""
+    if feedback.rating not in ("up", "down"):
+        raise HTTPException(status_code=400, detail="Rating must be 'up' or 'down'")
+    client_ip = http_request.headers.get("x-forwarded-for", http_request.client.host).split(",")[0].strip()
+    log_feedback(feedback.domain, feedback.rating, client_ip)
+    return {"status": "recorded"}
 
 
 @app.post("/api/company", response_model=ClarityResponse)
@@ -297,6 +320,9 @@ async def analyze_company(
         # Cache the successful response
         set_cached(domain, response_data.model_dump(), seller_domain_str, request.context)
 
+        # Log analytics
+        log_request(domain, True, elapsed, client_ip, seller_domain_str, has_email=bool(suggested_email))
+
         return response_data
 
     except asyncio.TimeoutError:
@@ -311,6 +337,7 @@ async def analyze_company(
     except Exception as e:
         elapsed = int((time.time() - start_time) * 1000)
         logger.error(f"Error analyzing {domain}: {e}", exc_info=True)
+        log_request(domain, False, elapsed, client_ip, seller_domain_str)
         return ClarityResponse(
             success=False,
             error=f"Analysis failed: {str(e)}",
