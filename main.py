@@ -55,6 +55,8 @@ def normalize_domain(raw: str) -> str:
     # Remove any path components
     if "/" in domain:
         domain = domain.split("/")[0]
+    # Strip spaces (handles company names like "amazon prime video")
+    domain = domain.replace(" ", "")
     # If no TLD (no dot), assume .com
     if "." not in domain:
         domain = domain + ".com"
