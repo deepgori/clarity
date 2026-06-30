@@ -129,6 +129,13 @@ async def health_check():
     return {"status": "healthy", "service": "clarity-api"}
 
 
+@app.get("/costs")
+async def get_costs(_key: str | None = Depends(verify_api_key)):
+    """Get cumulative OpenAI spend stats. Requires API key."""
+    from costs import cost_tracker
+    return cost_tracker.get_summary()
+
+
 @app.post("/api/company", response_model=ClarityResponse)
 async def analyze_company(
     request: ClarityRequest,

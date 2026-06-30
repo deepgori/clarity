@@ -11,6 +11,7 @@ import json
 import logging
 from openai import AsyncOpenAI
 from models.schemas import CompanyIntelligence
+from costs import cost_tracker
 
 logger = logging.getLogger(__name__)
 
@@ -84,6 +85,10 @@ async def generate_generic_email(
         max_tokens=200,
     )
 
+    usage = response.usage
+    if usage:
+        cost_tracker.record("gpt-4o-mini", usage.prompt_tokens, usage.completion_tokens, caller="generic_email")
+
     return response.choices[0].message.content.strip()
 
 
@@ -130,5 +135,9 @@ async def generate_clarity_email(
         temperature=0.7,
         max_tokens=300,
     )
+
+    usage = response.usage
+    if usage:
+        cost_tracker.record("gpt-4o", usage.prompt_tokens, usage.completion_tokens, caller="clarity_email")
 
     return response.choices[0].message.content.strip()

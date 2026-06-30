@@ -14,6 +14,7 @@ import json
 import logging
 from openai import AsyncOpenAI
 from models.schemas import SourceResult, CompanyIntelligence
+from costs import cost_tracker
 
 logger = logging.getLogger(__name__)
 
@@ -234,6 +235,12 @@ async def synthesize_intelligence(
     )
 
     raw_json = response.choices[0].message.content
+
+    # Track cost
+    usage = response.usage
+    if usage:
+        cost_tracker.record("gpt-4o", usage.prompt_tokens, usage.completion_tokens, caller="synthesis")
+
     parsed = json.loads(raw_json)
 
     logger.info(
