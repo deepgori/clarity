@@ -132,6 +132,14 @@ async def analyze_company(
     domain = normalize_domain(request.domain)
     seller_domain_str = normalize_domain(request.seller_domain) if request.seller_domain else None
 
+    # Self-targeting check
+    if seller_domain_str and seller_domain_str == domain:
+        return ClarityResponse(
+            success=False,
+            error="Target and seller are the same company. Use a different target domain.",
+            processing_time_ms=0,
+        )
+
     logger.info(f"Analyzing: {domain}")
 
     # Check cache first
@@ -142,10 +150,9 @@ async def analyze_company(
         return ClarityResponse(**cached)
 
     try:
-        # Phase 1: Parallel source fetching (target company)
+        # Phase 1: Parallel source fetching with overall timeout
         logger.info("Phase 1: Parallel source fetching")
 
-        # Build fetch tasks - include seller website if provided
         fetch_tasks = [
             fetch_website(domain),
             fetch_news(domain.split(".")[0], domain),
@@ -158,7 +165,20 @@ async def analyze_company(
             logger.info(f"Also fetching seller website: {seller_domain}")
             fetch_tasks.append(fetch_website(seller_domain))
 
-        results = await asyncio.gather(*fetch_tasks)
+        # Hard 45s timeout on all fetches combined
+        try:
+            results = await asyncio.wait_for(
+                asyncio.gather(*fetch_tasks),
+                timeout=45.0,
+            )
+        except asyncio.TimeoutError:
+            elapsed = int((time.time() - start_time) * 1000)
+            logger.warning(f"Source fetching timed out for {domain} after 45s")
+            return ClarityResponse(
+                success=False,
+                error=f"Fetching data for {domain} took too long. Try again or use a more specific domain.",
+                processing_time_ms=elapsed,
+            )
 
         website_result = results[0]
         news_result = results[1]
@@ -177,7 +197,6 @@ async def analyze_company(
         )
         logger.info(f"Source results: {sources_status}")
 
-        # We need at minimum the website to produce useful intelligence
         if not website_result.fetched:
             elapsed = int((time.time() - start_time) * 1000)
             return ClarityResponse(
@@ -224,6 +243,15 @@ async def analyze_company(
         set_cached(domain, response_data.model_dump(), seller_domain_str, request.context)
 
         return response_data
+
+    except asyncio.TimeoutError:
+        elapsed = int((time.time() - start_time) * 1000)
+        logger.error(f"Timeout analyzing {domain} after {elapsed}ms")
+        return ClarityResponse(
+            success=False,
+            error=f"Analysis timed out for {domain}. The website may be too large.",
+            processing_time_ms=elapsed,
+        )
 
     except Exception as e:
         elapsed = int((time.time() - start_time) * 1000)

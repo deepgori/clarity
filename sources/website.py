@@ -18,7 +18,10 @@ logger = logging.getLogger(__name__)
 TARGET_PAGES = ["", "/about", "/pricing", "/careers", "/products"]
 
 JINA_BASE_URL = "https://r.jina.ai"
-REQUEST_TIMEOUT = 12.0
+REQUEST_TIMEOUT = 15.0
+PAGE_TIMEOUT = 15.0  # max seconds per page (prevents one slow page from blocking)
+MAX_CHARS_PER_PAGE = 2500
+MAX_TOTAL_CHARS = 8000
 
 
 async def _fetch_via_jina(url: str, client: httpx.AsyncClient) -> str | None:
@@ -55,26 +58,36 @@ async def _fetch_via_trafilatura(url: str, client: httpx.AsyncClient) -> str | N
 async def _fetch_single_page(
     base_url: str, page_path: str, client: httpx.AsyncClient
 ) -> tuple[str, str | None]:
-    """Fetch a single page, trying Jina first then trafilatura. Returns (label, content)."""
+    """Fetch a single page with a hard timeout. Returns (label, content)."""
     url = f"{base_url}{page_path}"
     section_label = page_path.strip("/").upper() or "HOMEPAGE"
 
-    # Try Jina first (handles JS-rendered sites)
-    content = await _fetch_via_jina(url, client)
-
-    # Fall back to trafilatura if Jina fails
-    if content is None:
-        content = await _fetch_via_trafilatura(url, client)
+    try:
+        # Hard timeout per page so one slow page can't block everything
+        content = await asyncio.wait_for(
+            _fetch_page_content(url, client),
+            timeout=PAGE_TIMEOUT,
+        )
+    except asyncio.TimeoutError:
+        logger.warning(f"Page timeout after {PAGE_TIMEOUT}s: {url}")
+        return section_label, None
 
     if content:
         logger.info(f"Fetched {url} ({len(content)} chars)")
-        # Truncate individual pages to keep total manageable
-        if len(content) > 3000:
-            content = content[:3000] + "\n[Page truncated]"
+        if len(content) > MAX_CHARS_PER_PAGE:
+            content = content[:MAX_CHARS_PER_PAGE] + "\n[Page truncated]"
         return section_label, content
     else:
         logger.info(f"No content from {url}")
         return section_label, None
+
+
+async def _fetch_page_content(url: str, client: httpx.AsyncClient) -> str | None:
+    """Try Jina first, then trafilatura."""
+    content = await _fetch_via_jina(url, client)
+    if content is None:
+        content = await _fetch_via_trafilatura(url, client)
+    return content
 
 
 async def fetch_website(domain: str) -> SourceResult:
@@ -104,8 +117,8 @@ async def fetch_website(domain: str) -> SourceResult:
     if all_content:
         combined = "\n\n".join(all_content)
         # Final safety truncation
-        if len(combined) > 10000:
-            combined = combined[:10000] + "\n\n[Content truncated for processing]"
+        if len(combined) > MAX_TOTAL_CHARS:
+            combined = combined[:MAX_TOTAL_CHARS] + "\n\n[Content truncated for processing]"
 
         return SourceResult(
             source_type=SourceType.WEBSITE,
