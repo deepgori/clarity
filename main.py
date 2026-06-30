@@ -15,7 +15,7 @@ from contextlib import asynccontextmanager
 
 from pydantic import BaseModel, Field
 from typing import Optional
-from fastapi import FastAPI, Depends, HTTPException, Security
+from fastapi import FastAPI, Depends, HTTPException, Security, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -89,12 +89,20 @@ security = HTTPBearer(auto_error=False)
 
 
 async def verify_api_key(
+    request: Request,
     credentials: HTTPAuthorizationCredentials = Security(security),
 ) -> str | None:
-    """Check API key if one is configured. Skip auth if no key is set."""
+    """Check API key if one is configured. Skip auth for the built-in frontend."""
     expected_key = os.getenv("CLARITY_API_KEY", "").strip()
     if not expected_key:
         return None  # No key configured, allow all requests
+
+    # Allow requests from the built-in frontend (same-origin)
+    referer = request.headers.get("referer", "")
+    origin = request.headers.get("origin", "")
+    host = request.headers.get("host", "")
+    if host and (host in referer or host in origin):
+        return None
 
     if not credentials or credentials.credentials != expected_key:
         raise HTTPException(status_code=401, detail="Invalid API key")
