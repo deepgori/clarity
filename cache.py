@@ -23,7 +23,9 @@ DEFAULT_TTL = int(os.getenv("CACHE_TTL_SECONDS", 6 * 60 * 60))  # 6 hours
 def _get_db() -> sqlite3.Connection:
     """Get a database connection, creating the table if needed."""
     CACHE_DIR.mkdir(exist_ok=True)
-    conn = sqlite3.connect(str(CACHE_DB))
+    conn = sqlite3.connect(str(CACHE_DB), timeout=5.0)
+    conn.execute("PRAGMA journal_mode=WAL")
+    conn.execute("PRAGMA busy_timeout=3000")
     conn.execute("""
         CREATE TABLE IF NOT EXISTS cache (
             cache_key TEXT PRIMARY KEY,

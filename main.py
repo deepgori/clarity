@@ -29,6 +29,7 @@ from sources.github import fetch_github
 from synthesis.engine import synthesize_intelligence
 from agent import generate_generic_email, generate_clarity_email
 from cache import get_cached, set_cached
+from security import rate_limiter, validate_domain
 
 # Load environment variables
 load_dotenv()
@@ -50,6 +51,9 @@ def normalize_domain(raw: str) -> str:
     # Remove www. prefix
     if domain.startswith("www."):
         domain = domain[4:]
+    # Remove any path components
+    if "/" in domain:
+        domain = domain.split("/")[0]
     # If no TLD (no dot), assume .com
     if "." not in domain:
         domain = domain + ".com"
@@ -128,6 +132,7 @@ async def health_check():
 @app.post("/api/company", response_model=ClarityResponse)
 async def analyze_company(
     request: ClarityRequest,
+    http_request: Request,
     _key: str | None = Depends(verify_api_key),
 ):
     """
@@ -136,9 +141,26 @@ async def analyze_company(
     Fetches data from website, news, and GitHub in parallel,
     then synthesizes everything through OpenAI with contradiction detection.
     """
+    # Rate limiting
+    client_ip = http_request.headers.get("x-forwarded-for", http_request.client.host).split(",")[0].strip()
+    if not rate_limiter.is_allowed(client_ip):
+        raise HTTPException(
+            status_code=429,
+            detail=f"Rate limit exceeded. Max {rate_limiter.max_requests} requests per minute.",
+        )
+
     start_time = time.time()
     domain = normalize_domain(request.domain)
     seller_domain_str = normalize_domain(request.seller_domain) if request.seller_domain else None
+
+    # Domain validation
+    domain_error = validate_domain(domain)
+    if domain_error:
+        return ClarityResponse(success=False, error=domain_error, processing_time_ms=0)
+    if seller_domain_str:
+        seller_error = validate_domain(seller_domain_str)
+        if seller_error:
+            return ClarityResponse(success=False, error=f"Seller domain: {seller_error}", processing_time_ms=0)
 
     # Self-targeting check
     if seller_domain_str and seller_domain_str == domain:
@@ -213,29 +235,47 @@ async def analyze_company(
                 processing_time_ms=elapsed,
             )
 
-        # Phase 2: AI synthesis
+        # Phase 2: AI synthesis (30s timeout)
         logger.info("Phase 2: Synthesis with contradiction detection")
 
-        intelligence = await synthesize_intelligence(
-            domain=domain,
-            website_result=website_result,
-            news_result=news_result,
-            github_result=github_result,
-            seller_content=seller_content,
-            context=request.context,
-        )
+        try:
+            intelligence = await asyncio.wait_for(
+                synthesize_intelligence(
+                    domain=domain,
+                    website_result=website_result,
+                    news_result=news_result,
+                    github_result=github_result,
+                    seller_content=seller_content,
+                    context=request.context,
+                ),
+                timeout=30.0,
+            )
+        except asyncio.TimeoutError:
+            elapsed = int((time.time() - start_time) * 1000)
+            return ClarityResponse(
+                success=False,
+                error="AI synthesis timed out. OpenAI may be experiencing delays.",
+                processing_time_ms=elapsed,
+            )
 
-        # Phase 3: Generate suggested outreach email
+        # Phase 3: Generate suggested outreach email (30s timeout)
         selling_desc = "our product"
         if seller_content:
             selling_desc = seller_content[:300].strip()
         if request.context:
             selling_desc = request.context
 
-        suggested_email = await generate_clarity_email(
-            intelligence=intelligence,
-            selling=selling_desc,
-        )
+        try:
+            suggested_email = await asyncio.wait_for(
+                generate_clarity_email(
+                    intelligence=intelligence,
+                    selling=selling_desc,
+                ),
+                timeout=30.0,
+            )
+        except asyncio.TimeoutError:
+            logger.warning("Email generation timed out, returning without email")
+            suggested_email = None
 
         elapsed = int((time.time() - start_time) * 1000)
         logger.info(f"Complete: {domain} in {elapsed}ms")
