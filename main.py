@@ -369,20 +369,44 @@ class CompareResponse(BaseModel):
 
 
 @app.post("/api/compare", response_model=CompareResponse)
-async def compare_emails(request: CompareRequest):
+async def compare_emails(
+    request: CompareRequest,
+    http_request: Request,
+    _key: str | None = Depends(verify_api_key),
+):
     """
     Run the full pipeline: analyze a company, then generate two emails.
 
     Returns a generic cold email (no intelligence) side-by-side with
     a Clarity-powered personalized email. This is the core demo endpoint.
     """
+    # Rate limiting
+    client_ip = http_request.headers.get("x-forwarded-for", http_request.client.host).split(",")[0].strip()
+    if not rate_limiter.is_allowed(client_ip):
+        raise HTTPException(
+            status_code=429,
+            detail=f"Rate limit exceeded. Max {rate_limiter.max_requests} requests per minute.",
+        )
+
     start_time = time.time()
     domain = normalize_domain(request.domain)
+
+    # Domain validation
+    domain_error = validate_domain(domain)
+    if domain_error:
+        return CompareResponse(success=False, error=domain_error, processing_time_ms=0)
+
+    seller_domain_str = None
+    if request.seller_domain:
+        seller_domain_str = normalize_domain(request.seller_domain)
+        seller_error = validate_domain(seller_domain_str)
+        if seller_error:
+            return CompareResponse(success=False, error=f"Seller domain: {seller_error}", processing_time_ms=0)
 
     logger.info(f"Compare request: {domain}")
 
     try:
-        # Step 1: Fetch target company data + optional seller data
+        # Step 1: Fetch target company data + optional seller data (45s timeout)
         fetch_tasks = [
             fetch_website(domain),
             fetch_news(domain.split(".")[0], domain),
@@ -390,62 +414,98 @@ async def compare_emails(request: CompareRequest):
         ]
 
         seller_content = None
-        if request.seller_domain:
-            seller_domain = normalize_domain(request.seller_domain)
-            logger.info(f"Also fetching seller website: {seller_domain}")
-            fetch_tasks.append(fetch_website(seller_domain))
+        if seller_domain_str:
+            logger.info(f"Also fetching seller website: {seller_domain_str}")
+            fetch_tasks.append(fetch_website(seller_domain_str))
 
-        results = await asyncio.gather(*fetch_tasks)
+        try:
+            results = await asyncio.wait_for(
+                asyncio.gather(*fetch_tasks, return_exceptions=True),
+                timeout=45.0,
+            )
+        except asyncio.TimeoutError:
+            elapsed = int((time.time() - start_time) * 1000)
+            log_request(domain, False, elapsed, client_ip, seller_domain_str)
+            return CompareResponse(
+                success=False,
+                error=f"Fetching data for {domain} took too long.",
+                processing_time_ms=elapsed,
+            )
 
         website_result = results[0]
         news_result = results[1]
         github_result = results[2]
 
-        if request.seller_domain and len(results) > 3:
+        if seller_domain_str and len(results) > 3:
             seller_result = results[3]
-            if seller_result.fetched:
+            if not isinstance(seller_result, Exception) and seller_result.fetched:
                 seller_content = seller_result.content
 
-        if not website_result.fetched:
+        if isinstance(website_result, Exception) or not website_result.fetched:
             elapsed = int((time.time() - start_time) * 1000)
+            log_request(domain, False, elapsed, client_ip, seller_domain_str)
             return CompareResponse(
                 success=False,
                 error=f"Could not fetch website for {domain}",
                 processing_time_ms=elapsed,
             )
 
-        intelligence = await synthesize_intelligence(
-            domain=domain,
-            website_result=website_result,
-            news_result=news_result,
-            github_result=github_result,
-            seller_content=seller_content,
-            context=request.context,
-        )
+        # Step 2: AI synthesis (30s timeout)
+        try:
+            intelligence = await asyncio.wait_for(
+                synthesize_intelligence(
+                    domain=domain,
+                    website_result=website_result,
+                    news_result=news_result if not isinstance(news_result, Exception) else news_result,
+                    github_result=github_result if not isinstance(github_result, Exception) else github_result,
+                    seller_content=seller_content,
+                    context=request.context,
+                ),
+                timeout=30.0,
+            )
+        except asyncio.TimeoutError:
+            elapsed = int((time.time() - start_time) * 1000)
+            log_request(domain, False, elapsed, client_ip, seller_domain_str)
+            return CompareResponse(
+                success=False,
+                error="AI synthesis timed out. OpenAI may be experiencing delays.",
+                processing_time_ms=elapsed,
+            )
 
-        # Build a selling description from seller content for email generation
+        # Build selling description
         selling_desc = "our product"
         if seller_content:
-            # Use the first 200 chars of seller content as a brief description
             selling_desc = seller_content[:200].strip()
         if request.context:
             selling_desc = request.context
 
-        # Step 2: Generate both emails in parallel
-        generic_email, clarity_email = await asyncio.gather(
-            generate_generic_email(
-                company_name=intelligence.company_name,
-                domain=domain,
-                selling=selling_desc,
-            ),
-            generate_clarity_email(
-                intelligence=intelligence,
-                selling=selling_desc,
-            ),
-        )
+        # Step 3: Generate both emails in parallel (30s timeout each)
+        try:
+            generic_email, clarity_email = await asyncio.wait_for(
+                asyncio.gather(
+                    generate_generic_email(
+                        company_name=intelligence.company_name,
+                        domain=domain,
+                        selling=selling_desc,
+                    ),
+                    generate_clarity_email(
+                        intelligence=intelligence,
+                        selling=selling_desc,
+                    ),
+                ),
+                timeout=30.0,
+            )
+        except asyncio.TimeoutError:
+            elapsed = int((time.time() - start_time) * 1000)
+            logger.warning("Email generation timed out in compare")
+            generic_email = None
+            clarity_email = None
 
         elapsed = int((time.time() - start_time) * 1000)
         logger.info(f"Compare complete: {domain} in {elapsed}ms")
+
+        # Log analytics
+        log_request(domain, True, elapsed, client_ip, seller_domain_str, has_email=bool(clarity_email))
 
         return CompareResponse(
             success=True,
@@ -459,6 +519,7 @@ async def compare_emails(request: CompareRequest):
     except Exception as e:
         elapsed = int((time.time() - start_time) * 1000)
         logger.error(f"Compare error for {domain}: {e}", exc_info=True)
+        log_request(domain, False, elapsed, client_ip, seller_domain_str)
         return CompareResponse(
             success=False,
             error=f"Comparison failed: {str(e)}",
