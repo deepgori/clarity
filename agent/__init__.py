@@ -25,22 +25,20 @@ Write the kind of generic email that most AI SDR tools send today.
 Keep it under 100 words. No subject line, just the body."""
 
 
-CLARITY_EMAIL_PROMPT = """You are a top-performing SDR who just spent 30 minutes researching a company.
-Write a cold outreach email to {company_name} that could ONLY have been written by someone
-who did real research. This is NOT a template with the company name swapped in.
+CLARITY_EMAIL_PROMPT = """You are a top-performing SDR writing a cold email that PROVES you did real research.
+The email should make the reader think "how did they know that?" not "this is a template."
 
 You are selling: {selling}
 
-Here is everything you found about {company_name}:
-
+TARGET COMPANY INTELLIGENCE:
 Company: {company_name} ({domain})
 What they do: {what_they_do}
 Industry: {industry} | Stage: {stage}
 
-SIGNALS (recent moves that create urgency):
+SIGNALS (recent moves, non-obvious patterns):
 {signals_text}
 
-CONTRADICTIONS (gaps between what they say and what they do):
+CONTRADICTIONS (tensions between claims and behavior):
 {contradictions_text}
 
 TECH STACK: {tech_stack}
@@ -51,19 +49,23 @@ RECOMMENDED ANGLE: {recommended_angle}
 TIMING: {timing}
 TARGET PERSONA: {decision_maker}
 
-RULES:
-1. Open with a SPECIFIC observation. Not "I noticed your company does X" but reference an actual signal,
-   contradiction, or hiring pattern. Show you did homework.
-2. Connect the observation to a real problem they likely face. Be specific about the pain.
-3. Reference at least ONE concrete detail from the intelligence (a signal, a contradiction,
-   a hiring pattern, or a tech stack choice) that most people would not know.
-4. Keep it under 100 words. Busy people skim.
-5. End with a low-friction ask (not "can I get 30 minutes of your time").
-6. Do NOT use the phrases: "I noticed", "I came across", "I hope this finds you well",
-   "I wanted to reach out", "leverage", "synergy".
-7. Do NOT use em dashes.
-8. Sound like a human, not a bot. No corporate buzzwords.
-9. No subject line, just the body."""
+STRICT RULES:
+1. OPENING LINE: Start with a specific, non-obvious observation. NOT their revenue, scale,
+   or most famous product metric. Reference a signal, a contradiction, a hiring pattern,
+   or a recent move that most people wouldn't notice. The reader should think "they actually
+   looked into us" within the first sentence.
+2. NEVER open with a compliment about their size, revenue, volume, or uptime. Every email
+   they get starts this way. Do the opposite.
+3. Connect your observation to a specific problem they likely face right now.
+4. Show exactly how your product solves THAT specific problem (not generically).
+5. Keep it under 80 words. Shorter is better. Busy people skim.
+6. End with a low-friction ask. Not "can I get 30 minutes" but something like
+   "worth a 5-min look?" or a specific question they'd want to answer.
+7. BANNED PHRASES: "I noticed", "I came across", "I hope this finds you well",
+   "I wanted to reach out", "leverage", "synergy", "impressive", "remarkable"
+8. Do NOT use em dashes.
+9. Sound like a sharp peer, not a salesperson. No corporate buzzwords.
+10. No subject line, just the body."""
 
 
 async def generate_generic_email(
