@@ -26,6 +26,7 @@ from models.schemas import ClarityRequest, ClarityResponse, CompanyIntelligence
 from sources.website import fetch_website
 from sources.news import fetch_news
 from sources.github import fetch_github
+from sources.careers import extract_careers_data, format_careers_for_synthesis
 from synthesis.engine import synthesize_intelligence
 from agent import generate_generic_email, generate_clarity_email
 from cache import get_cached, set_cached
@@ -267,6 +268,32 @@ async def analyze_company(
                 processing_time_ms=elapsed,
             )
 
+        # Phase 1.5: Extract structured careers data (runs in parallel with nothing, fast)
+        careers_text = None
+        if website_result.fetched and website_result.content:
+            # Extract the CAREERS section from the combined website content
+            content = website_result.content
+            careers_start = content.find("=== CAREERS ===")
+            if careers_start != -1:
+                careers_end = content.find("===", careers_start + 15)
+                careers_text = content[careers_start:careers_end] if careers_end != -1 else content[careers_start:]
+
+        careers_formatted = None
+        if careers_text and len(careers_text.strip()) > 100:
+            logger.info("Phase 1.5: Extracting structured careers data")
+            try:
+                careers_data = await asyncio.wait_for(
+                    extract_careers_data(careers_text),
+                    timeout=15.0,
+                )
+                if careers_data:
+                    careers_formatted = format_careers_for_synthesis(careers_data)
+                    logger.info(f"Careers extraction: {careers_data.get('total_roles_found', 0)} roles parsed")
+            except asyncio.TimeoutError:
+                logger.warning("Careers extraction timed out, continuing without it")
+            except Exception as e:
+                logger.warning(f"Careers extraction failed: {e}")
+
         # Phase 2: AI synthesis (30s timeout)
         logger.info("Phase 2: Synthesis with contradiction detection")
 
@@ -279,6 +306,7 @@ async def analyze_company(
                     github_result=github_result,
                     seller_content=seller_content,
                     context=request.context,
+                    careers_data=careers_formatted,
                 ),
                 timeout=30.0,
             )
@@ -450,6 +478,27 @@ async def compare_emails(
                 processing_time_ms=elapsed,
             )
 
+        # Step 1.5: Extract structured careers data
+        careers_text = None
+        if website_result.content:
+            content = website_result.content
+            careers_start = content.find("=== CAREERS ===")
+            if careers_start != -1:
+                careers_end = content.find("===", careers_start + 15)
+                careers_text = content[careers_start:careers_end] if careers_end != -1 else content[careers_start:]
+
+        careers_formatted = None
+        if careers_text and len(careers_text.strip()) > 100:
+            try:
+                careers_data_parsed = await asyncio.wait_for(
+                    extract_careers_data(careers_text),
+                    timeout=15.0,
+                )
+                if careers_data_parsed:
+                    careers_formatted = format_careers_for_synthesis(careers_data_parsed)
+            except (asyncio.TimeoutError, Exception):
+                pass  # Non-critical, continue without careers data
+
         # Step 2: AI synthesis (30s timeout)
         try:
             intelligence = await asyncio.wait_for(
@@ -460,6 +509,7 @@ async def compare_emails(
                     github_result=github_result if not isinstance(github_result, Exception) else github_result,
                     seller_content=seller_content,
                     context=request.context,
+                    careers_data=careers_formatted,
                 ),
                 timeout=30.0,
             )

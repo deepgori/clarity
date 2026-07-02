@@ -109,13 +109,20 @@ COMPANY DOMAIN: {domain}
 --- GITHUB PRESENCE ---
 {github_content}
 
+--- STRUCTURED CAREERS DATA ---
+{careers_content}
+
 === END SOURCE DATA ===
 
 Generate the CompanyIntelligence JSON object. Pay special attention to:
-1. Any contradictions between what the website claims and what GitHub/News shows
-2. Specific, actionable sales strategy (not generic advice)
-3. Honest confidence scoring based on data quality
-4. Hiring signals and what they imply about the company's priorities"""
+1. Cross-reference website CLAIMS against the structured careers data. Look for tensions
+   between what the company says it does and what they're actually hiring for.
+   Example: if the website says "AI-first" but no engineering roles mention ML/AI.
+2. Cross-reference website claims against GitHub commit activity. Are repos marked
+   as "STALE" or "ABANDONED" while the website claims active open-source?
+3. Use hiring patterns (departments, locations, seniority) as signals of company priorities.
+4. Specific, actionable sales strategy based on observable evidence.
+5. Honest confidence scoring based on data quality."""
 
 
 # JSON schema for structured output, matches CompanyIntelligence Pydantic model
@@ -205,6 +212,7 @@ async def synthesize_intelligence(
     github_result: SourceResult,
     seller_content: str | None = None,
     context: str | None = None,
+    careers_data: str | None = None,
 ) -> CompanyIntelligence:
     """
     Synthesize raw source data into structured company intelligence.
@@ -216,6 +224,7 @@ async def synthesize_intelligence(
     website_content = website_result.content if website_result.fetched else "No website data available."
     news_content = news_result.content if news_result.fetched else "No recent news found."
     github_content = github_result.content if github_result.fetched else "No GitHub presence found."
+    careers_content = careers_data or "No structured careers data available."
 
     selling_context = ""
     if seller_content:
@@ -243,6 +252,7 @@ async def synthesize_intelligence(
         website_content=website_content,
         news_content=news_content,
         github_content=github_content,
+        careers_content=careers_content,
     )
 
     logger.info(f"Sending synthesis request to OpenAI ({len(user_prompt)} chars)...")

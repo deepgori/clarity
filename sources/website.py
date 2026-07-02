@@ -17,11 +17,15 @@ logger = logging.getLogger(__name__)
 # Pages to fetch from any company website
 TARGET_PAGES = ["", "/about", "/pricing", "/careers", "/products"]
 
+# Pages with strong claims worth capturing in full
+CLAIMS_DENSE_PAGES = {"/about", "/pricing"}
+
 JINA_BASE_URL = "https://r.jina.ai"
 REQUEST_TIMEOUT = 15.0
 PAGE_TIMEOUT = 15.0  # max seconds per page (prevents one slow page from blocking)
-MAX_CHARS_PER_PAGE = 2500
-MAX_TOTAL_CHARS = 8000
+MAX_CHARS_DEFAULT = 2500
+MAX_CHARS_CLAIMS = 4000  # more context for claims-dense pages
+MAX_TOTAL_CHARS = 12000
 
 
 async def _fetch_via_jina(url: str, client: httpx.AsyncClient) -> str | None:
@@ -74,8 +78,9 @@ async def _fetch_single_page(
 
     if content:
         logger.info(f"Fetched {url} ({len(content)} chars)")
-        if len(content) > MAX_CHARS_PER_PAGE:
-            content = content[:MAX_CHARS_PER_PAGE] + "\n[Page truncated]"
+        max_chars = MAX_CHARS_CLAIMS if page_path in CLAIMS_DENSE_PAGES else MAX_CHARS_DEFAULT
+        if len(content) > max_chars:
+            content = content[:max_chars] + "\n[Page truncated]"
         return section_label, content
     else:
         logger.info(f"No content from {url}")

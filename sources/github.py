@@ -7,6 +7,7 @@ Uses the GitHub REST API (free: 60 req/hr unauthenticated, 5000 with token).
 
 import os
 import logging
+from datetime import datetime, timezone
 import httpx
 from models.schemas import SourceResult, SourceType
 
@@ -88,6 +89,38 @@ async def _get_languages(repo_full_name: str, client: httpx.AsyncClient) -> dict
     return {}
 
 
+async def _get_last_commit_date(repo_full_name: str, client: httpx.AsyncClient) -> tuple[str, int]:
+    """Get the date of the most recent commit and days since then."""
+    try:
+        response = await _github_get(
+            f"{GITHUB_API_BASE}/repos/{repo_full_name}/commits",
+            client,
+            params={"per_page": 1},
+        )
+        if response.status_code == 200:
+            commits = response.json()
+            if commits:
+                date_str = commits[0].get("commit", {}).get("committer", {}).get("date", "")
+                if date_str:
+                    commit_date = datetime.fromisoformat(date_str.replace("Z", "+00:00"))
+                    days_ago = (datetime.now(timezone.utc) - commit_date).days
+                    return date_str[:10], days_ago
+    except Exception as e:
+        logger.warning(f"Failed to get commit date for {repo_full_name}: {e}")
+    return "unknown", -1
+
+
+def _activity_label(days_ago: int) -> str:
+    """Label a repo's activity level based on days since last commit."""
+    if days_ago < 0:
+        return "unknown"
+    if days_ago <= 30:
+        return "ACTIVE (committed within 30 days)"
+    if days_ago <= 180:
+        return f"STALE (no commits in {days_ago} days)"
+    return f"ABANDONED (no commits in {days_ago} days)"
+
+
 async def fetch_github(domain: str) -> SourceResult:
     """
     Fetch technical footprint from a company's GitHub presence.
@@ -124,7 +157,7 @@ async def fetch_github(domain: str) -> SourceResult:
 
         all_languages = {}
 
-        for repo in repos[:5]:
+        for idx, repo in enumerate(repos[:5]):
             name = repo.get("name", "")
             description = repo.get("description", "No description")
             stars = repo.get("stargazers_count", 0)
@@ -133,17 +166,25 @@ async def fetch_github(domain: str) -> SourceResult:
             updated = repo.get("updated_at", "")
             archived = repo.get("archived", False)
 
+            # Get commit recency for top 3 repos
+            last_commit_date = "unknown"
+            activity_status = "unknown"
+            if idx < 3:
+                last_commit_date, days_ago = await _get_last_commit_date(f"{org}/{name}", client)
+                activity_status = _activity_label(days_ago)
+
             content_parts.append(
                 f"\n--- REPO: {name} ---\n"
                 f"Description: {description}\n"
                 f"Stars: {stars} | Forks: {forks}\n"
                 f"Primary Language: {language}\n"
                 f"Last Updated: {updated}\n"
+                f"Last Commit: {last_commit_date} ({activity_status})\n"
                 f"Archived: {archived}\n"
             )
 
             # Get language breakdown for top repos
-            if stars > 0 or repos.index(repo) < 3:
+            if stars > 0 or idx < 3:
                 languages = await _get_languages(f"{org}/{name}", client)
                 for lang, bytes_count in languages.items():
                     all_languages[lang] = all_languages.get(lang, 0) + bytes_count
