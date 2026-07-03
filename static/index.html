@@ -937,7 +937,10 @@
                 const body = { domain, seller_domain: sellerDomain };
                 if (context) body.context = context;
 
-                const response = await fetch('/api/company', {
+                // Construct the API URL explicitly to avoid browser URL parsing errors
+                const apiUrl = window.location.origin + '/api/company';
+
+                const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(body),
@@ -963,7 +966,13 @@
 
             } catch (err) {
                 statusEl.className = 'status-msg error';
-                statusEl.textContent = 'Network error: ' + err.message;
+                if (err.name === 'TypeError' && err.message.includes('pattern')) {
+                    statusEl.textContent = 'Connection error. Please refresh the page and try again.';
+                } else if (err.name === 'TypeError') {
+                    statusEl.textContent = 'Could not connect to the server. The service may be starting up. Please wait 30 seconds and try again.';
+                } else {
+                    statusEl.textContent = 'Error: ' + err.message;
+                }
             } finally {
                 analyzeBtn.disabled = false;
                 analyzeBtn.classList.remove('loading');
@@ -1137,7 +1146,7 @@
             const domain = window._lastAnalyzedDomain || '';
             if (!domain) return;
 
-            fetch('/api/feedback', {
+            fetch(window.location.origin + '/api/feedback', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ domain, rating }),
