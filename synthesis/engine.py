@@ -304,7 +304,7 @@ async def synthesize_intelligence(
                 "schema": INTELLIGENCE_SCHEMA,
             },
         },
-        temperature=0.3,  # Lower temp for more factual output
+        temperature=0,  # Deterministic output for consistent contradiction detection
     )
 
     raw_json = response.choices[0].message.content
@@ -315,6 +315,14 @@ async def synthesize_intelligence(
         cost_tracker.record("gpt-4o", usage.prompt_tokens, usage.completion_tokens, caller="synthesis")
 
     parsed = json.loads(raw_json)
+
+    # If no contradictions found, run a focused re-check pass
+    if len(parsed.get("contradictions", [])) == 0:
+        recheck_contradictions = await _recheck_contradictions(
+            client, domain, user_prompt, parsed.get("company_name", domain)
+        )
+        if recheck_contradictions:
+            parsed["contradictions"] = recheck_contradictions
 
     # Post-process: scrub banned phrases from text fields
     _scrub_synthesis_output(parsed)
@@ -356,3 +364,68 @@ def _scrub_synthesis_output(parsed: dict) -> None:
     for field in ["conversation_starter", "recommended_angle", "relevance_reasoning", "timing_assessment"]:
         if field in strat and isinstance(strat[field], str):
             strat[field] = scrub(strat[field])
+
+
+CONTRADICTION_RECHECK_PROMPT = """You are a contradiction detection specialist. Your ONLY job is to find genuine contradictions.
+
+You previously analyzed this company and found NO contradictions. Look again more carefully.
+
+PROCESS:
+1. Read the website content. List every positioning claim (e.g., "AI-powered", "developer-first", "open-source", "enterprise-ready", "global platform", "trusted by X customers").
+2. For EACH claim, check the careers page, GitHub activity, and news for evidence that SUPPORTS or UNDERMINES it.
+3. A contradiction exists ONLY when evidence ACTIVELY UNDERMINES a claim, not just "limited evidence."
+
+EXAMPLES OF GENUINE CONTRADICTIONS:
+- Website says "AI-powered" but careers page has zero ML/AI/data science roles
+- Claims "developer-first" but GitHub repos haven't been updated in months
+- Says "trusted by 10,000+ companies" but no customer testimonials, case studies, or press mentions exist
+- Claims "open-source" but all repos are archived or inactive
+- Website says "global platform" but all job postings are in one city
+- Claims rapid growth but news articles mention layoffs
+
+If you find a genuine contradiction, return it as JSON. If nothing genuine exists, return an empty array.
+Return ONLY a JSON object with this exact structure:
+{"contradictions": [{"claim_a": "what the website claims", "claim_b": "what the evidence shows", "resolution": "why this matters", "sales_implication": "how this changes the sales approach"}]}"""
+
+
+async def _recheck_contradictions(
+    client: AsyncOpenAI,
+    domain: str,
+    original_user_prompt: str,
+    company_name: str,
+) -> list[dict] | None:
+    """
+    Focused second pass that ONLY looks for contradictions.
+    Runs when the main synthesis returned 0 contradictions.
+    """
+    logger.info(f"Running contradiction re-check for {company_name}...")
+
+    try:
+        response = await client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": CONTRADICTION_RECHECK_PROMPT},
+                {"role": "user", "content": original_user_prompt},
+            ],
+            response_format={"type": "json_object"},
+            temperature=0,
+            max_tokens=500,
+        )
+
+        usage = response.usage
+        if usage:
+            cost_tracker.record("gpt-4o", usage.prompt_tokens, usage.completion_tokens, caller="contradiction_recheck")
+
+        result = json.loads(response.choices[0].message.content)
+        contradictions = result.get("contradictions", [])
+
+        if contradictions:
+            logger.info(f"Contradiction re-check found {len(contradictions)} for {company_name}")
+            return contradictions
+        else:
+            logger.info(f"Contradiction re-check confirmed: no genuine contradictions for {company_name}")
+            return None
+
+    except Exception as e:
+        logger.warning(f"Contradiction re-check failed for {company_name}: {e}")
+        return None
