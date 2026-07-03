@@ -61,10 +61,11 @@ STRICT RULES:
 5. Keep it under 80 words. Shorter is better. Busy people skim.
 6. End with a low-friction ask. Not "can I get 30 minutes" but something like
    "worth a 5-min look?" or a specific question they'd want to answer.
-7. BANNED PHRASES (do NOT use any form of these, including without pronouns):
+7. BANNED PHRASES (do NOT use any form of these, including plurals or without pronouns):
    "noticed", "I noticed", "I came across", "I hope this finds you well",
-   "I wanted to reach out", "leverage", "synergy", "impressive", "remarkable",
-   "congratulations", "congrats", "kudos". Do NOT start with any variant of "noticed".
+   "I wanted to reach out", "leverage", "synergy", "synergies", "impressive",
+   "remarkable", "congratulations", "congrats", "kudos", "game-changing",
+   "game changer", "revolutionize", "transform". Do NOT start with any variant of "noticed".
 8. Do NOT use em dashes.
 9. Sound like a sharp peer, not a salesperson. No corporate buzzwords.
 10. No subject line, just the body.

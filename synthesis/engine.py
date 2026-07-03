@@ -99,8 +99,17 @@ SALES STRATEGY:
   - recommended_angle: Reference a SPECIFIC finding from your cross-referencing
   - conversation_starter: Must reference something that would SURPRISE the prospect.
     Never open with their most famous metric or a compliment.
+    BANNED PHRASES in conversation_starter (never use ANY form of these):
+    "I noticed", "noticed", "I came across", "I hope this finds you well",
+    "congratulations", "congrats", "impressive", "remarkable", "leverage", "synergies".
+    Instead, start with a direct question or observation that implies insider knowledge.
   - avoid_topics: Explain WHY each topic would backfire
   - timing_assessment: Based on observable signals only, not speculation
+
+WRITING STYLE (applies to ALL text fields in the output):
+  - NEVER use "synergy", "synergies", "leverage", "impressive", "remarkable"
+  - NEVER use em dashes
+  - Sound like a sharp analyst, not a salesperson
 
 SOURCE ATTRIBUTION (CRITICAL):
   Every specific claim in your output MUST be traceable to the provided source data.
