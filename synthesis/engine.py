@@ -102,6 +102,16 @@ SALES STRATEGY:
   - avoid_topics: Explain WHY each topic would backfire
   - timing_assessment: Based on observable signals only, not speculation
 
+SOURCE ATTRIBUTION (CRITICAL):
+  Every specific claim in your output MUST be traceable to the provided source data.
+  - If a signal mentions a product name, funding amount, partnership, or specific metric,
+    it MUST appear verbatim in the WEBSITE CONTENT, NEWS, GITHUB, or CAREERS sections above.
+  - NEVER invent, interpolate, or "fill in" specific details. If the source data says
+    "new model announced" but doesn't name it, say "new model announced" not a made-up name.
+  - If you are uncertain whether a specific claim is in the source data, DO NOT include it.
+  - For each signal, mentally tag which source it came from (website, news, GitHub, careers).
+    If you can't identify the source, drop the signal.
+
 CONFIDENCE: Rate 0-1 based on source richness. Multiple sources with fresh data = high.
 Thin data with gaps = low. Be honest.
 
