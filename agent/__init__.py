@@ -65,7 +65,10 @@ STRICT RULES:
    "I wanted to reach out", "leverage", "synergy", "impressive", "remarkable"
 8. Do NOT use em dashes.
 9. Sound like a sharp peer, not a salesperson. No corporate buzzwords.
-10. No subject line, just the body."""
+10. No subject line, just the body.
+11. NEVER use placeholder brackets like [Name], [CTO's Name], [Your Name], [Company].
+    Write the email as a ready-to-send body with no blanks to fill in.
+    If you don't know someone's name, don't address anyone by name."""
 
 
 async def generate_generic_email(
