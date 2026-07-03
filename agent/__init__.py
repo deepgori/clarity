@@ -148,4 +148,50 @@ async def generate_clarity_email(
     if usage:
         cost_tracker.record("gpt-4o", usage.prompt_tokens, usage.completion_tokens, caller="clarity_email")
 
-    return response.choices[0].message.content.strip()
+    raw_email = response.choices[0].message.content.strip()
+    return _scrub_banned_phrases(raw_email)
+
+
+# Banned phrases that the LLM consistently ignores in prompt instructions.
+# Post-processing is the only reliable enforcement mechanism.
+import re
+
+_BANNED_PATTERNS = [
+    (r'\bsynergies\b', 'alignment'),
+    (r'\bsynergy\b', 'alignment'),
+    (r'\bleverage\b', 'use'),
+    (r'\bLeverage\b', 'Use'),
+    (r'\bimpressive\b', 'notable'),
+    (r'\bremarkable\b', 'notable'),
+    (r'\bgame-changing\b', 'significant'),
+    (r'\bgame changer\b', 'significant shift'),
+    (r'\brevolutionize\b', 'improve'),
+    (r'\btransform\b', 'improve'),
+    (r'\bI noticed\b', 'Your'),
+    (r'\bI came across\b', 'Your'),
+    (r'\bCongratulations\b', 'Your recent'),
+    (r'\bcongratulations\b', 'your recent'),
+    (r'\bCongrats\b', 'Your recent'),
+    (r'\bcongrats\b', 'your recent'),
+]
+
+# Patterns to remove entirely (with surrounding context cleanup)
+_BANNED_REMOVALS = [
+    r'I hope this finds you well\.?\s*',
+    r'I wanted to reach out\s*(to you\s*)?',
+]
+
+
+def _scrub_banned_phrases(text: str) -> str:
+    """Post-process generated text to remove banned phrases the LLM ignores."""
+    for pattern, replacement in _BANNED_PATTERNS:
+        text = re.sub(pattern, replacement, text, flags=re.IGNORECASE)
+
+    for pattern in _BANNED_REMOVALS:
+        text = re.sub(pattern, '', text, flags=re.IGNORECASE)
+
+    # Clean up em dashes
+    text = text.replace('\u2014', ',')  # em dash to comma
+    text = text.replace('\u2013', '-')  # en dash to hyphen
+
+    return text.strip()

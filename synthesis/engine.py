@@ -316,6 +316,9 @@ async def synthesize_intelligence(
 
     parsed = json.loads(raw_json)
 
+    # Post-process: scrub banned phrases from text fields
+    _scrub_synthesis_output(parsed)
+
     logger.info(
         f"Synthesis complete: {parsed.get('company_name', 'Unknown')} | "
         f"Confidence: {parsed.get('overall_confidence', 0)} | "
@@ -323,3 +326,33 @@ async def synthesize_intelligence(
     )
 
     return CompanyIntelligence(**parsed)
+
+
+def _scrub_synthesis_output(parsed: dict) -> None:
+    """Post-process synthesis output to remove banned phrases the LLM ignores."""
+    import re
+
+    banned_patterns = [
+        (r'\bsynergies\b', 'alignment'),
+        (r'\bsynergy\b', 'alignment'),
+        (r'\bleverage\b', 'use'),
+        (r'\bimpressive\b', 'notable'),
+        (r'\bremarkable\b', 'notable'),
+        (r'\bI noticed\b', 'Your'),
+        (r'\bI came across\b', 'Your'),
+        (r'\bCongratulations\b', 'Your recent'),
+        (r'\bcongratulations\b', 'your recent'),
+        (r'\bcongrats\b', 'your recent'),
+    ]
+
+    def scrub(text: str) -> str:
+        for pattern, replacement in banned_patterns:
+            text = re.sub(pattern, replacement, text, flags=re.IGNORECASE)
+        text = text.replace('\u2014', ',').replace('\u2013', '-')
+        return text
+
+    # Scrub key text fields in sales_strategy
+    strat = parsed.get("sales_strategy", {})
+    for field in ["conversation_starter", "recommended_angle", "relevance_reasoning", "timing_assessment"]:
+        if field in strat and isinstance(strat[field], str):
+            strat[field] = scrub(strat[field])
