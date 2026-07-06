@@ -71,6 +71,12 @@ Not "limited evidence" but "evidence pointing the opposite direction."
   - If no genuine contradiction exists, return an EMPTY array. This is fine.
   - One sharp, well-evidenced contradiction is worth infinitely more than three weak ones.
   - The sales_implication must change HOW you'd pitch, not just be an observation.
+  - GITHUB ACTIVITY RULE: The data includes an ORG ACTIVITY SUMMARY with counts of
+    active, stale, and abandoned repos. Use THIS summary to assess overall activity.
+    Do NOT generalize from a single abandoned repo to "the org is inactive on GitHub."
+    If ANY repos are marked ACTIVE (committed within 30 days), the org has recent GitHub
+    activity. Only flag GitHub inactivity if the MAJORITY of checked repos are abandoned
+    AND zero repos show recent commits.
 
 SIGNALS (things that imply CURRENT MOTION, not static facts):
 For each potential signal, ask: "When did this become true?"

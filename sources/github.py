@@ -6,6 +6,7 @@ Uses the GitHub REST API (free: 60 req/hr unauthenticated, 5000 with token).
 """
 
 import os
+import asyncio
 import logging
 from datetime import datetime, timezone
 import httpx
@@ -42,41 +43,112 @@ async def _github_get(url: str, client: httpx.AsyncClient, **kwargs) -> httpx.Re
 
 
 async def _find_org(domain: str, client: httpx.AsyncClient) -> str | None:
-    """Try to find the GitHub org name from a domain."""
-    # Common patterns: stripe.com -> stripe, vercel.com -> vercel
-    org_guess = domain.split(".")[0]
+    """Try to find the GitHub org name from a domain.
 
-    # Check if the org exists
-    response = await _github_get(f"{GITHUB_API_BASE}/orgs/{org_guess}", client)
-    if response.status_code == 200:
-        return org_guess
+    Many companies use variations: scale.ai -> scaleapi, linear.app -> linearapp.
+    We try multiple candidates and pick the one with the most public repos
+    to avoid mapping to an unrelated org with the same short name.
+    """
+    base = domain.split(".")[0]
+    tld = domain.split(".")[-1] if "." in domain else ""
 
-    # Also try as a user (some companies use user accounts)
-    response = await _github_get(f"{GITHUB_API_BASE}/users/{org_guess}", client)
+    # Generate candidates - keep it small to avoid GitHub rate limits
+    candidates = [base]
+    # Most common patterns only: {name}api, {name}-ai, {name}hq
+    for suffix in ["api", "-ai", "hq"]:
+        candidates.append(base + suffix)
+    # If TLD is unusual (not .com), try {base}{tld} too (linear.app -> linearapp)
+    if tld and tld not in ("com", "org", "net", "io"):
+        candidates.append(base + tld)
+
+    # Check all candidates in parallel (with timeout to avoid rate limit stalls)
+    async def _check_candidate(name):
+        try:
+            response = await _github_get(f"{GITHUB_API_BASE}/orgs/{name}", client)
+            if response.status_code == 200:
+                data = response.json()
+                return name, data.get("public_repos", 0)
+        except Exception:
+            pass
+        return name, -1
+
+    try:
+        results = await asyncio.wait_for(
+            asyncio.gather(*[_check_candidate(c) for c in candidates]),
+            timeout=8.0,
+        )
+    except asyncio.TimeoutError:
+        logger.warning(f"GitHub org lookup timed out for {domain}, falling back to '{base}'")
+        return base
+
+    best_org = None
+    best_repos = -1
+    for name, repos in results:
+        if repos > best_repos:
+            best_repos = repos
+            best_org = name
+
+    if best_org:
+        logger.info(f"GitHub org resolved: {domain} -> {best_org} ({best_repos} public repos)")
+        return best_org
+
+    # Fallback: try as a user account
+    response = await _github_get(f"{GITHUB_API_BASE}/users/{base}", client)
     if response.status_code == 200:
-        return org_guess
+        return base
 
     return None
 
 
 async def _get_top_repos(org: str, client: httpx.AsyncClient) -> list[dict]:
-    """Get top repos by stars for an org."""
+    """Get top repos by stars AND recently pushed repos for a balanced view.
+
+    Fetching only by stars causes the model to see famous-but-abandoned repos
+    and miss active development. We fetch both and deduplicate.
+    """
+    starred = []
+    recent = []
+
+    # Top by stars (the famous repos)
     response = await _github_get(
         f"{GITHUB_API_BASE}/orgs/{org}/repos", client,
         params={"sort": "stars", "direction": "desc", "per_page": 5, "type": "public"},
     )
     if response.status_code == 200:
-        return response.json()
+        starred = response.json()
+    else:
+        # Try as user repos if org endpoint fails
+        response = await _github_get(
+            f"{GITHUB_API_BASE}/users/{org}/repos", client,
+            params={"sort": "stars", "direction": "desc", "per_page": 5, "type": "public"},
+        )
+        if response.status_code == 200:
+            starred = response.json()
 
-    # Try as user repos if org endpoint fails
+    # Recently pushed (the active repos)
     response = await _github_get(
-        f"{GITHUB_API_BASE}/users/{org}/repos", client,
-        params={"sort": "stars", "direction": "desc", "per_page": 5, "type": "public"},
+        f"{GITHUB_API_BASE}/orgs/{org}/repos", client,
+        params={"sort": "pushed", "direction": "desc", "per_page": 5, "type": "public"},
     )
     if response.status_code == 200:
-        return response.json()
+        recent = response.json()
+    else:
+        response = await _github_get(
+            f"{GITHUB_API_BASE}/users/{org}/repos", client,
+            params={"sort": "pushed", "direction": "desc", "per_page": 5, "type": "public"},
+        )
+        if response.status_code == 200:
+            recent = response.json()
 
-    return []
+    # Deduplicate: starred first, then any recent repos not already included
+    seen_ids = {r.get("id") for r in starred}
+    combined = list(starred)
+    for r in recent:
+        if r.get("id") not in seen_ids:
+            combined.append(r)
+            seen_ids.add(r.get("id"))
+
+    return combined[:8]  # Cap at 8 repos total
 
 
 async def _get_languages(repo_full_name: str, client: httpx.AsyncClient) -> dict:
@@ -156,8 +228,9 @@ async def fetch_github(domain: str) -> SourceResult:
         content_parts = [f"GitHub Organization: {org}\nPublic Repositories:\n"]
 
         all_languages = {}
+        activity_counts = {"active": 0, "stale": 0, "abandoned": 0, "unknown": 0}
 
-        for idx, repo in enumerate(repos[:5]):
+        for idx, repo in enumerate(repos[:8]):
             name = repo.get("name", "")
             description = repo.get("description", "No description")
             stars = repo.get("stargazers_count", 0)
@@ -166,12 +239,19 @@ async def fetch_github(domain: str) -> SourceResult:
             updated = repo.get("updated_at", "")
             archived = repo.get("archived", False)
 
-            # Get commit recency for top 3 repos
-            last_commit_date = "unknown"
-            activity_status = "unknown"
-            if idx < 3:
-                last_commit_date, days_ago = await _get_last_commit_date(f"{org}/{name}", client)
-                activity_status = _activity_label(days_ago)
+            # Get commit recency for ALL repos (not just top 3)
+            last_commit_date, days_ago = await _get_last_commit_date(f"{org}/{name}", client)
+            activity_status = _activity_label(days_ago)
+
+            # Track activity counts for org summary
+            if days_ago < 0:
+                activity_counts["unknown"] += 1
+            elif days_ago <= 30:
+                activity_counts["active"] += 1
+            elif days_ago <= 180:
+                activity_counts["stale"] += 1
+            else:
+                activity_counts["abandoned"] += 1
 
             content_parts.append(
                 f"\n--- REPO: {name} ---\n"
@@ -188,6 +268,18 @@ async def fetch_github(domain: str) -> SourceResult:
                 languages = await _get_languages(f"{org}/{name}", client)
                 for lang, bytes_count in languages.items():
                     all_languages[lang] = all_languages.get(lang, 0) + bytes_count
+
+        # Add org-level activity summary at the TOP so the model sees it first
+        total_checked = sum(activity_counts.values())
+        summary = (
+            f"\n=== ORG ACTIVITY SUMMARY ===\n"
+            f"Repos checked: {total_checked}\n"
+            f"Active (committed within 30 days): {activity_counts['active']}\n"
+            f"Stale (30-180 days): {activity_counts['stale']}\n"
+            f"Abandoned (180+ days): {activity_counts['abandoned']}\n"
+        )
+        # Insert summary right after the header
+        content_parts.insert(1, summary)
 
         # Summarize overall tech stack
         if all_languages:
