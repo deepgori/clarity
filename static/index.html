@@ -321,6 +321,94 @@
             100% { content: '...'; }
         }
 
+        /* Progress Tracker */
+        .progress-tracker {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .progress-tracker .timer {
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .progress-step {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 0;
+            font-size: 13px;
+            color: var(--text-secondary);
+            opacity: 0.4;
+            transition: opacity 0.3s ease, color 0.3s ease;
+        }
+
+        .progress-step.active {
+            opacity: 1;
+            color: var(--text-primary);
+        }
+
+        .progress-step.done {
+            opacity: 0.7;
+            color: var(--green);
+        }
+
+        .progress-step .step-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        .progress-step .step-icon .spinner-sm {
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(139, 92, 246, 0.2);
+            border-top: 2px solid var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .progress-step .step-label {
+            flex: 1;
+        }
+
+        .progress-step .step-time {
+            font-size: 11px;
+            color: var(--text-secondary);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .progress-bar-track {
+            width: 100%;
+            height: 3px;
+            background: var(--border);
+            border-radius: 2px;
+            margin-top: 16px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--accent-hover));
+            border-radius: 2px;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
         /* Results */
         .results {
             max-width: 940px;
@@ -877,6 +965,43 @@
 
     <div id="status" class="status-msg" style="display:none;"></div>
 
+    <div id="progress-tracker" class="progress-tracker" style="display:none;">
+        <div class="timer" id="progress-timer">0.0s</div>
+        <div class="progress-step" id="step-website">
+            <div class="step-icon" id="icon-website"></div>
+            <div class="step-label">Scraping target website + seller site</div>
+            <div class="step-time" id="time-website"></div>
+        </div>
+        <div class="progress-step" id="step-news">
+            <div class="step-icon" id="icon-news"></div>
+            <div class="step-label">Searching Google News for recent coverage</div>
+            <div class="step-time" id="time-news"></div>
+        </div>
+        <div class="progress-step" id="step-github">
+            <div class="step-icon" id="icon-github"></div>
+            <div class="step-label">Scanning GitHub for open-source activity</div>
+            <div class="step-time" id="time-github"></div>
+        </div>
+        <div class="progress-step" id="step-careers">
+            <div class="step-icon" id="icon-careers"></div>
+            <div class="step-label">Extracting careers and hiring patterns</div>
+            <div class="step-time" id="time-careers"></div>
+        </div>
+        <div class="progress-step" id="step-synthesis">
+            <div class="step-icon" id="icon-synthesis"></div>
+            <div class="step-label">AI synthesis with contradiction detection</div>
+            <div class="step-time" id="time-synthesis"></div>
+        </div>
+        <div class="progress-step" id="step-email">
+            <div class="step-icon" id="icon-email"></div>
+            <div class="step-label">Generating intelligence-driven outreach</div>
+            <div class="step-time" id="time-email"></div>
+        </div>
+        <div class="progress-bar-track">
+            <div class="progress-bar-fill" id="progress-bar"></div>
+        </div>
+    </div>
+
     <section class="results" id="results">
         <div class="company-header" id="company-header"></div>
         <div id="relevance-banner" class="relevance-banner"></div>
@@ -929,9 +1054,12 @@
             analyzeBtn.classList.add('loading');
             resultsEl.classList.remove('visible');
             featuresEl.style.display = 'none';
-            statusEl.style.display = 'block';
-            statusEl.className = 'status-msg';
-            statusEl.innerHTML = 'Researching both companies in parallel<span class="loading-dots"></span>';
+            statusEl.style.display = 'none';
+
+            // Start the progress tracker
+            const progressTracker = document.getElementById('progress-tracker');
+            progressTracker.style.display = 'block';
+            startProgressTracker();
 
             try {
                 const body = { domain, seller_domain: sellerDomain };
@@ -961,10 +1089,15 @@
                 }
 
                 statusEl.style.display = 'none';
+                stopProgressTracker();
+                document.getElementById('progress-tracker').style.display = 'none';
                 renderResults(data);
                 resultsEl.classList.add('visible');
 
             } catch (err) {
+                stopProgressTracker();
+                document.getElementById('progress-tracker').style.display = 'none';
+                statusEl.style.display = 'block';
                 statusEl.className = 'status-msg error';
                 if (err.name === 'TypeError' && err.message.includes('pattern')) {
                     statusEl.textContent = 'Connection error. Please refresh the page and try again.';
@@ -976,7 +1109,110 @@
             } finally {
                 analyzeBtn.disabled = false;
                 analyzeBtn.classList.remove('loading');
+                stopProgressTracker();
+                document.getElementById('progress-tracker').style.display = 'none';
             }
+        }
+
+        // Progress tracker - shows what the system is doing during the ~25s analysis
+        let _progressInterval = null;
+        let _progressStart = 0;
+        let _progressTimeouts = [];
+
+        const STEPS = ['website', 'news', 'github', 'careers', 'synthesis', 'email'];
+
+        // Calibrated to actual backend timings:
+        // 0-2s: website/news/github (parallel fetch)
+        // 2-4s: careers extraction
+        // 4-8s: sources finished
+        // 8-20s: synthesis + contradiction detection
+        // 20-25s: email generation
+        const PHASE_SCHEDULE = [
+            { step: 'website', action: 'active', at: 0 },
+            { step: 'news', action: 'active', at: 200 },
+            { step: 'github', action: 'active', at: 400 },
+            { step: 'news', action: 'done', at: 3000 },
+            { step: 'github', action: 'done', at: 4000 },
+            { step: 'website', action: 'done', at: 6000 },
+            { step: 'careers', action: 'active', at: 7000 },
+            { step: 'careers', action: 'done', at: 10000 },
+            { step: 'synthesis', action: 'active', at: 10500 },
+            { step: 'synthesis', action: 'done', at: 22000 },
+            { step: 'email', action: 'active', at: 22500 },
+        ];
+
+        const PROGRESS_TARGETS = [
+            { at: 0, pct: 5 },
+            { at: 3000, pct: 20 },
+            { at: 6000, pct: 35 },
+            { at: 10000, pct: 50 },
+            { at: 15000, pct: 65 },
+            { at: 20000, pct: 80 },
+            { at: 25000, pct: 90 },
+            { at: 30000, pct: 95 },
+        ];
+
+        function setStepState(stepId, state) {
+            const stepEl = document.getElementById('step-' + stepId);
+            const iconEl = document.getElementById('icon-' + stepId);
+            if (!stepEl || !iconEl) return;
+
+            stepEl.className = 'progress-step ' + state;
+
+            if (state === 'active') {
+                iconEl.innerHTML = '<div class="spinner-sm"></div>';
+            } else if (state === 'done') {
+                iconEl.innerHTML = '&#10003;';
+                const timeEl = document.getElementById('time-' + stepId);
+                if (timeEl) {
+                    const elapsed = ((Date.now() - _progressStart) / 1000).toFixed(1);
+                    timeEl.textContent = elapsed + 's';
+                }
+            } else {
+                iconEl.innerHTML = '';
+            }
+        }
+
+        function startProgressTracker() {
+            _progressStart = Date.now();
+
+            // Reset all steps
+            STEPS.forEach(s => setStepState(s, ''));
+            document.getElementById('progress-bar').style.width = '0%';
+            document.getElementById('progress-timer').textContent = '0.0s';
+
+            // Schedule phase transitions
+            _progressTimeouts = PHASE_SCHEDULE.map(phase =>
+                setTimeout(() => setStepState(phase.step, phase.action), phase.at)
+            );
+
+            // Schedule progress bar updates
+            PROGRESS_TARGETS.forEach(target => {
+                _progressTimeouts.push(
+                    setTimeout(() => {
+                        document.getElementById('progress-bar').style.width = target.pct + '%';
+                    }, target.at)
+                );
+            });
+
+            // Update timer every 100ms
+            _progressInterval = setInterval(() => {
+                const elapsed = ((Date.now() - _progressStart) / 1000).toFixed(1);
+                document.getElementById('progress-timer').textContent = elapsed + 's';
+            }, 100);
+        }
+
+        function stopProgressTracker() {
+            if (_progressInterval) {
+                clearInterval(_progressInterval);
+                _progressInterval = null;
+            }
+            _progressTimeouts.forEach(t => clearTimeout(t));
+            _progressTimeouts = [];
+
+            // Mark all as done and fill bar
+            STEPS.forEach(s => setStepState(s, 'done'));
+            document.getElementById('progress-bar').style.width = '100%';
         }
 
         function renderResults(data) {
