@@ -25,7 +25,7 @@ from dotenv import load_dotenv
 from models.schemas import ClarityRequest, ClarityResponse, CompanyIntelligence
 from sources.website import fetch_website
 from sources.news import fetch_news
-from sources.github import fetch_github
+from sources.github import fetch_github, refetch_github_with_website_hint
 from sources.careers import extract_careers_data, format_careers_for_synthesis
 from synthesis.engine import synthesize_intelligence
 from agent import generate_generic_email, generate_clarity_email
@@ -260,6 +260,25 @@ async def analyze_company(
         )
         logger.info(f"Source results: {sources_status}")
 
+        # Phase 1.1: Check if GitHub org mapping looks wrong
+        # If GitHub data has all abandoned/unknown repos, try extracting the
+        # real org from the website content (e.g. notion.so -> makenotion)
+        if github_result.fetched and website_result.fetched:
+            content = github_result.content
+            has_active = "ACTIVE (committed within 30 days)" in content
+            all_abandoned = (
+                "Active (committed within 30 days): 0" in content
+                and ("Abandoned" in content or "No public repositories" in content)
+            )
+            if not has_active and all_abandoned:
+                logger.info("GitHub data looks suspicious (0 active repos), trying website hint...")
+                refetched = await refetch_github_with_website_hint(
+                    domain, website_result.content
+                )
+                if refetched and refetched.fetched:
+                    github_result = refetched
+                    logger.info(f"GitHub org corrected via website hint")
+
         if not website_result.fetched:
             elapsed = int((time.time() - start_time) * 1000)
             return ClarityResponse(
@@ -477,6 +496,24 @@ async def compare_emails(
                 error=f"Could not fetch website for {domain}",
                 processing_time_ms=elapsed,
             )
+
+        # Phase 1.1: Check if GitHub org mapping looks wrong
+        if (not isinstance(github_result, Exception) and github_result.fetched
+                and website_result.fetched):
+            gh_content = github_result.content
+            has_active = "ACTIVE (committed within 30 days)" in gh_content
+            all_abandoned = (
+                "Active (committed within 30 days): 0" in gh_content
+                and ("Abandoned" in gh_content or "No public repositories" in gh_content)
+            )
+            if not has_active and all_abandoned:
+                logger.info("GitHub data looks suspicious (0 active repos), trying website hint...")
+                refetched = await refetch_github_with_website_hint(
+                    domain, website_result.content
+                )
+                if refetched and refetched.fetched:
+                    github_result = refetched
+                    logger.info("GitHub org corrected via website hint")
 
         # Step 1.5: Extract structured careers data
         careers_text = None
