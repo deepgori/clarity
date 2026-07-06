@@ -71,7 +71,24 @@ Not "limited evidence" but "evidence pointing the opposite direction."
   - If no genuine contradiction exists, return an EMPTY array. This is fine.
   - One sharp, well-evidenced contradiction is worth infinitely more than three weak ones.
   - The sales_implication must change HOW you'd pitch, not just be an observation.
-  - GITHUB ACTIVITY RULE: The data includes an ORG ACTIVITY SUMMARY with counts of
+
+  FORBIDDEN - AUTOMATIC REJECTION:
+  Any contradiction where claim_b ONLY references the careers page, job postings,
+  or hiring must be REJECTED. Do not include it. Examples of FORBIDDEN contradictions:
+  - "Claims growth but careers page shows no open positions" -> REJECT
+  - "Claims AI-powered but no open positions" -> REJECT
+  - "Claims to be hiring but careers page is sparse" -> REJECT
+  These are NEVER valid because companies hire through recruiters, LinkedIn, or
+  may not be actively hiring. A sparse careers page proves nothing.
+
+  VALID contradictions require evidence from GitHub, news, or specific product
+  claims that DIRECTLY CONTRADICT each other. Examples:
+  - "Claims developer-first but GitHub repos abandoned for 8+ months" -> VALID
+  - "Claims AI-powered but GitHub has no ML repos AND news mentions pivoting away from AI" -> VALID
+  - "Claims open-source but all repos are archived" -> VALID
+  - "Claims rapid growth but news articles mention layoffs" -> VALID
+
+  GITHUB ACTIVITY RULE: The data includes an ORG ACTIVITY SUMMARY with counts of
     active, stale, and abandoned repos. Use THIS summary to assess overall activity.
     Do NOT generalize from a single abandoned repo to "the org is inactive on GitHub."
     If ANY repos are marked ACTIVE (committed within 30 days), the org has recent GitHub
@@ -381,15 +398,31 @@ PROCESS:
 2. For EACH claim, check the careers page, GitHub activity, and news for evidence that SUPPORTS or UNDERMINES it.
 3. A contradiction exists ONLY when evidence ACTIVELY UNDERMINES a claim, not just "limited evidence."
 
-EXAMPLES OF GENUINE CONTRADICTIONS:
-- Website says "AI-powered" but careers page has zero ML/AI/data science roles
-- Claims "developer-first" but GitHub repos haven't been updated in months
-- Says "trusted by 10,000+ companies" but no customer testimonials, case studies, or press mentions exist
-- Claims "open-source" but all repos are archived or inactive
-- Website says "global platform" but all job postings are in one city
-- Claims rapid growth but news articles mention layoffs
+CONTRADICTION QUALITY HIERARCHY:
+TIER 1 (STRONG - report these): Specific product/technical claim contradicted by
+  specific technical evidence from 2+ sources. E.g. "Claims AI-powered but GitHub
+  shows no ML repos AND no AI-related job postings."
+TIER 2 (MODERATE - report if well-evidenced): Marketing claim contradicted by a
+  single strong counter-signal. E.g. "Claims developer-first but GitHub repos
+  abandoned for 8+ months."
+TIER 3 (WEAK - DO NOT REPORT): "Careers page shows few/no open positions."
+  This is NEVER a valid contradiction by itself. Companies hire through recruiters,
+  LinkedIn, or may legitimately not be hiring. Only use careers data to CORROBORATE
+  a stronger Tier 1 or Tier 2 finding.
 
-If you find a genuine contradiction, return it as JSON. If nothing genuine exists, return an empty array.
+EXAMPLES OF GENUINE CONTRADICTIONS:
+- Website says "AI-powered" but GitHub shows no ML repos AND careers has zero AI roles (Tier 1)
+- Claims "developer-first" but GitHub repos haven't been updated in months (Tier 2)
+- Says "trusted by 10,000+ companies" but no customer testimonials, case studies, or press exist (Tier 1)
+- Claims "open-source" but all repos are archived or inactive (Tier 2)
+- Claims rapid growth but news articles mention layoffs (Tier 1)
+
+NOT CONTRADICTIONS (do not report):
+- "Claims X but careers page shows no open positions" (Tier 3, never standalone)
+- "Claims AI-powered but no open AI positions" (hiring is cyclical, not contradictory)
+- "Enterprise-ready but low GitHub activity" (enterprise code is proprietary)
+
+If you find a TIER 1 or TIER 2 contradiction, return it as JSON. If nothing genuine exists, return an empty array.
 Return ONLY a JSON object with this exact structure:
 {"contradictions": [{"claim_a": "what the website claims", "claim_b": "what the evidence shows", "resolution": "why this matters", "sales_implication": "how this changes the sales approach"}]}"""
 
