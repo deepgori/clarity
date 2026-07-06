@@ -420,6 +420,10 @@ async def _recheck_contradictions(
         contradictions = result.get("contradictions", [])
 
         if contradictions:
+            # Ensure re-check contradictions have all required fields
+            for c in contradictions:
+                c.setdefault("source_a", "website")
+                c.setdefault("source_b", "cross-reference")
             logger.info(f"Contradiction re-check found {len(contradictions)} for {company_name}")
             return contradictions
         else:
