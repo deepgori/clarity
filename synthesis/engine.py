@@ -156,6 +156,11 @@ Not "limited evidence" but "evidence pointing the opposite direction."
     zero ATS is merely consistent with it. Example:
     - WeWork (Late-stage, post-bankruptcy): news reports bankruptcy + growth claims
       -> contradiction sourced from NEWS, not from ATS data.
+    When using this exception, the hiring_signals field must be CONSISTENT with the
+    contradiction. Do NOT say "Hiring data unavailable" while also citing zero
+    listings as supporting evidence. Instead say:
+    "No listings found on checked ATS platforms (Greenhouse, Lever, Ashby) —
+    consistent with other indicators of operational constraints."
 
     FOR ALL COMPANIES:
     - Do NOT flag this if the company is a small startup (seed/pre-seed) where
@@ -255,6 +260,7 @@ Return a JSON object matching the CompanyIntelligence schema exactly."""
 
 SYNTHESIS_USER_PROMPT = """Analyze this company and generate structured intelligence.
 
+DATA FETCHED ON: {fetch_date}
 COMPANY DOMAIN: {domain}
 {selling_context}
 
@@ -298,7 +304,9 @@ Generate the CompanyIntelligence JSON object. Pay special attention to:
 5. Use hiring patterns (departments, locations, seniority) as signals of company priorities.
 6. When GitHub is sparse but job postings are available, use job data as primary tech evidence.
 7. Specific, actionable sales strategy based on observable evidence.
-8. Honest confidence scoring based on data quality."""
+8. Honest confidence scoring based on data quality.
+9. For data_freshness: use ONLY the "DATA FETCHED ON" date above. Format as
+   "Data is current as of {fetch_date}". Do NOT hallucinate or invent a date."""
 
 
 # JSON schema for structured output, matches CompanyIntelligence Pydantic model
@@ -436,8 +444,12 @@ async def synthesize_intelligence(
     elif context:
         selling_context = f"\nCONTEXT: {context}\n"
 
+    from datetime import datetime, timezone
+    fetch_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
     user_prompt = SYNTHESIS_USER_PROMPT.format(
         domain=domain,
+        fetch_date=fetch_date,
         selling_context=selling_context,
         website_content=website_content,
         news_content=news_content,
@@ -534,6 +546,13 @@ PROCESS:
 2. For EACH claim, check the careers page, GitHub activity, news, AND external job postings for evidence that SUPPORTS or UNDERMINES it.
 3. A contradiction exists ONLY when evidence ACTIVELY UNDERMINES a claim, not just "limited evidence."
 
+CRITICAL ENTERPRISE ATS RULE:
+If this company is Public, Fortune 500, or has thousands of employees (Salesforce, Zoom,
+Google, Microsoft, etc.): ZERO listings on Greenhouse/Lever/Ashby is EXPECTED because
+these companies use Workday, Taleo, or SuccessFactors. Do NOT treat zero ATS listings
+as a contradiction for large enterprises. This applies to TIER 2 "zero open positions"
+as well. Only flag zero ATS for startups and mid-market companies.
+
 CONTRADICTION QUALITY HIERARCHY:
 TIER 1 (STRONG - report these): Specific product/technical claim contradicted by
   specific technical evidence from 2+ sources. Examples:
@@ -546,8 +565,8 @@ TIER 2 (MODERATE - report if well-evidenced): Marketing claim contradicted by a
   - "Claims AI-first but ZERO out of 30 external job descriptions mention ML, AI,
     data science, PyTorch, or TensorFlow."
   - "Claims developer-first but GitHub repos abandoned for 8+ months."
-  - "Claims rapid scaling but external job boards (Greenhouse, Lever, Ashby) show
-    zero open positions."
+  - "Claims rapid scaling but external job boards show zero open positions."
+    NOTE: This is ONLY valid for startups/mid-market, NOT for Public/enterprise companies.
 TIER 3 (WEAK - DO NOT REPORT): "Company's OWN careers page shows few/no open positions."
   A sparse /careers page is NEVER a valid contradiction by itself. Companies hire
   through recruiters, LinkedIn, or external job boards.
@@ -565,6 +584,7 @@ EXAMPLES OF GENUINE CONTRADICTIONS:
 NOT CONTRADICTIONS (do not report):
 - "Claims X but company's own careers page shows no open positions" (Tier 3, never standalone)
 - "Enterprise-ready but low GitHub activity" (enterprise code is proprietary)
+- "Claims growth but zero ATS listings" for a PUBLIC or large enterprise company (enterprise ATS rule)
 
 If you find a TIER 1 or TIER 2 contradiction, return it as JSON. If nothing genuine exists, return an empty array.
 Return ONLY a JSON object with this exact structure:
