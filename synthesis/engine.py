@@ -126,6 +126,19 @@ Not "limited evidence" but "evidence pointing the opposite direction."
     - The contradiction source_b should cite "External Job Postings" with the
       specific ATS platform and number of roles analyzed.
 
+  ZERO JOB LISTINGS RULE:
+    If the external job postings section says "ZERO job listings found across all
+    checked ATS platforms" AND the company's website claims active growth, expansion,
+    scaling, momentum, or hiring: this IS a potential contradiction. The absence of
+    external hiring across Greenhouse, Lever, AND Ashby, combined with growth claims,
+    suggests either a hiring freeze, financial constraints, or the growth narrative
+    may not reflect current operational reality.
+    - Source this as: "External Job Postings (zero listings across Greenhouse, Lever, Ashby)"
+    - This is ESPECIALLY significant for companies that have had public financial
+      difficulties, layoffs, or restructuring events mentioned in the news.
+    - Do NOT flag this if the company is a small startup (seed/pre-seed) where minimal
+      hiring is normal, OR if the website does not make growth/expansion claims.
+
 SIGNALS (things that imply CURRENT MOTION, not static facts):
 For each potential signal, ask: "When did this become true?"
   - If the answer is "always" or "years ago," it's a FACT, not a signal. Skip it.

@@ -360,11 +360,23 @@ async def fetch_jobs(domain: str) -> SourceResult:
                 fetched=True,
             )
 
+    # No listings found across any ATS platform - this IS meaningful data
     logger.info(f"No external job board found for {domain}")
+    slugs_tried = ", ".join(slugs[:4])
+    empty_result = (
+        f"ZERO job listings found across all checked ATS platforms.\n"
+        f"Platforms checked: Greenhouse, Lever, Ashby\n"
+        f"Company slugs tried: {slugs_tried}\n"
+        f"This means either: (1) the company uses a different ATS (e.g., Workday, iCIMS, "
+        f"Taleo), (2) the company has minimal or no active external hiring, or "
+        f"(3) all hiring is done through recruiters or LinkedIn.\n"
+        f"NOTE: If the company's website claims active growth, scaling, or expansion "
+        f"but zero external job postings exist, this absence is itself a data point "
+        f"worth cross-referencing against their public claims."
+    )
     return SourceResult(
         source_type=SourceType.JOBS,
         url=f"https://{domain}/careers",
-        content="",
-        fetched=False,
-        error="No external job board found (checked Greenhouse, Lever, Ashby)",
+        content=empty_result,
+        fetched=True,  # We DID check - finding nothing is a valid result
     )
