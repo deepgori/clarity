@@ -139,6 +139,25 @@ Not "limited evidence" but "evidence pointing the opposite direction."
     - Do NOT flag this if the company is a small startup (seed/pre-seed) where minimal
       hiring is normal, OR if the website does not make growth/expansion claims.
 
+  COMMUNITY DISCUSSIONS AS CONTRADICTION EVIDENCE (Hacker News):
+    The community discussions section contains real public discussions about this
+    company from Hacker News. The KEY FINDINGS subsection extracts important themes.
+    Use this data for contradiction detection as follows:
+    - If KEY FINDINGS lists "FINANCIAL ISSUES" (bankruptcy, losses, layoffs, fraud)
+      AND the company's website claims growth, stability, or momentum: this IS a
+      contradiction. Source it as "Hacker News community discussions."
+    - If KEY FINDINGS lists "LEADERSHIP CHANGES" (CEO steps down, resignations)
+      AND the company's website presents stable executive leadership: this IS a signal.
+    - If KEY FINDINGS lists "QUALITY/RELIABILITY ISSUES" AND the company claims
+      enterprise-ready or reliable: this IS a contradiction.
+    - HN discussion titles with 500+ points represent significant public scrutiny.
+      "WeWork Goes Bankrupt" with 727 points is not a rumor, it is established fact.
+    - Even if the discussions are older than 12 months, they represent HISTORICAL
+      CONTEXT that directly contradicts current growth claims. A company that went
+      bankrupt 2 years ago claiming "strong momentum" is a contradiction.
+    - ALWAYS include "Hacker News community discussions" in sources_used if
+      community data was provided and contained any KEY FINDINGS.
+
 SIGNALS (things that imply CURRENT MOTION, not static facts):
 For each potential signal, ask: "When did this become true?"
   - If the answer is "always" or "years ago," it's a FACT, not a signal. Skip it.

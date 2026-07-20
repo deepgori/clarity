@@ -178,61 +178,41 @@ def _analyze_hn_data(
         age = _time_ago(created)
         parts.append(f"  - \"{title}\" ({points} points, {num_comments} comments, {age})")
 
-    # Extract and summarize top comments (actual sentiment)
-    all_comments = []
-    for story_id, comments in comments_by_story.items():
-        if comments:
-            for c in comments:
-                text = _clean_comment_text(c.get("comment_text", ""))
-                if text and len(text) > 50:
-                    all_comments.append({
-                        "text": text,
-                        "story_id": story_id,
-                        "points": c.get("points", 0),
-                    })
+    # Generate explicit contradiction evidence from titles
+    # This section helps the LLM understand what HN reveals about the company
+    parts.append("")
+    parts.append("KEY FINDINGS FROM HN DISCUSSIONS (use for contradiction detection):")
+    
+    title_text = " ".join(s.get("title", "").lower() for s in stories)
+    
+    # Check for bankruptcy/financial issues
+    financial_terms = ["bankrupt", "bankruptcy", "losses", "layoff", "fired", 
+                       "shut down", "collapse", "fraud", "scam", "ponzi"]
+    financial_found = [t for t in financial_terms if t in title_text]
+    if financial_found:
+        parts.append(f"  - FINANCIAL ISSUES in HN titles: {', '.join(financial_found)}")
+        parts.append(f"    If the company's website claims growth or stability, these HN")
+        parts.append(f"    discussions are direct contradiction evidence.")
+    
+    # Check for product/quality issues
+    quality_terms = ["broken", "down", "outage", "problem", "terrible", "worst",
+                     "slow", "unreliable", "security breach", "data loss"]
+    quality_found = [t for t in quality_terms if t in title_text]
+    if quality_found:
+        parts.append(f"  - QUALITY/RELIABILITY ISSUES in HN titles: {', '.join(quality_found)}")
 
-    if all_comments:
-        # Sort by engagement
-        all_comments.sort(key=lambda x: x.get("points", 0), reverse=True)
-        parts.append("")
-        parts.append(f"Sample community comments ({min(len(all_comments), 8)} shown):")
-        for c in all_comments[:8]:
-            parts.append(f"  - \"{c['text']}\"")
-
-    # Detect sentiment patterns
-    patterns = []
-    titles_lower = " ".join(s.get("title", "").lower() for s in stories)
-    comments_lower = " ".join(c.get("text", "").lower() for c in all_comments)
-    combined = titles_lower + " " + comments_lower
-
-    # Negative sentiment keywords
-    negative_terms = ["bankrupt", "layoff", "lawsuit", "scam", "fraud", "crash",
-                      "broken", "terrible", "worst", "problem", "issue", "bug",
-                      "slow", "expensive", "overpriced", "downtime", "outage",
-                      "security breach", "data loss", "unreliable"]
-    negative_found = [t for t in negative_terms if t in combined]
-    if negative_found:
-        patterns.append(f"Negative sentiment detected in discussions: {', '.join(negative_found)}")
-
-    # Positive sentiment keywords
-    positive_terms = ["love", "great", "excellent", "best", "amazing", "recommend",
-                      "fast", "reliable", "solid", "impressive"]
-    positive_found = [t for t in positive_terms if t in combined]
+    # Check for leadership issues
+    leadership_terms = ["steps down", "ceo", "fired", "resign", "leaves", "controversy"]
+    leadership_found = [t for t in leadership_terms if t in title_text]
+    if leadership_found:
+        parts.append(f"  - LEADERSHIP CHANGES in HN titles: {', '.join(leadership_found)}")
+    
+    # Check for positive signals
+    positive_terms = ["launch", "raises", "funding", "acquired", "ipo", "growth",
+                      "open source", "release"]
+    positive_found = [t for t in positive_terms if t in title_text]
     if positive_found:
-        patterns.append(f"Positive sentiment detected: {', '.join(positive_found)}")
-
-    # Competition mentions
-    competitor_terms = ["alternative", "switch", "migrate", "moved from", "replaced",
-                       "competitor", "vs", "versus", "compared to"]
-    competitor_found = [t for t in competitor_terms if t in combined]
-    if competitor_found:
-        patterns.append(f"Competitive discussion themes: {', '.join(competitor_found)}")
-
-    if patterns:
-        parts.append("")
-        parts.append("Sentiment patterns:")
-        for p in patterns:
-            parts.append(f"  - {p}")
+        parts.append(f"  - POSITIVE SIGNALS in HN titles: {', '.join(positive_found)}")
 
     return "\n".join(parts)
 
@@ -285,25 +265,9 @@ async def fetch_community(domain: str) -> SourceResult:
 
         logger.info(f"HN: Found {len(all_stories)} stories for {domain}, analyzing top {len(top_stories)}")
 
-        # Fetch comments for top 3 highest-engagement stories
-        comments_by_story = {}
-        comment_stories = top_stories[:3]
-        comment_tasks = [
-            _fetch_hn_comments(s.get("objectID", ""), client)
-            for s in comment_stories
-            if s.get("objectID")
-        ]
-        comment_results = await asyncio.gather(*comment_tasks, return_exceptions=True)
-
-        for i, result in enumerate(comment_results):
-            if isinstance(result, Exception) or result is None:
-                continue
-            story_id = comment_stories[i].get("objectID", "")
-            comments_by_story[story_id] = result
-
-        # Analyze and format
+        # Analyze and format (titles-only, no comment fetching needed)
         company_name = domain.split(".")[0]
-        analysis = _analyze_hn_data(top_stories, comments_by_story, company_name)
+        analysis = _analyze_hn_data(top_stories, {}, company_name)
 
         return SourceResult(
             source_type=SourceType.COMMUNITY,
