@@ -142,21 +142,38 @@ Not "limited evidence" but "evidence pointing the opposite direction."
   COMMUNITY DISCUSSIONS AS CONTRADICTION EVIDENCE (Hacker News):
     The community discussions section contains real public discussions about this
     company from Hacker News. The KEY FINDINGS subsection extracts important themes.
-    Use this data for contradiction detection as follows:
-    - If KEY FINDINGS lists "FINANCIAL ISSUES" (bankruptcy, losses, layoffs, fraud)
-      AND the company's website claims growth, stability, or momentum: this IS a
-      contradiction. Source it as "Hacker News community discussions."
-    - If KEY FINDINGS lists "LEADERSHIP CHANGES" (CEO steps down, resignations)
-      AND the company's website presents stable executive leadership: this IS a signal.
-    - If KEY FINDINGS lists "QUALITY/RELIABILITY ISSUES" AND the company claims
-      enterprise-ready or reliable: this IS a contradiction.
-    - HN discussion titles with 500+ points represent significant public scrutiny.
-      "WeWork Goes Bankrupt" with 727 points is not a rumor, it is established fact.
-    - Even if the discussions are older than 12 months, they represent HISTORICAL
-      CONTEXT that directly contradicts current growth claims. A company that went
-      bankrupt 2 years ago claiming "strong momentum" is a contradiction.
-    - ALWAYS include "Hacker News community discussions" in sources_used if
-      community data was provided and contained any KEY FINDINGS.
+
+    RECENCY RULE FOR COMMUNITY CONTRADICTIONS:
+    Community discussions may ONLY be cited as contradiction evidence if:
+    - The discussion is RECENT (within ~12 months) AND describes a CURRENT state
+      that conflicts with the company's CURRENT claims.
+    - GOOD: "Claims enterprise-ready, HN thread from 3 months ago describes
+      ongoing outages at scale" -> VALID contradiction (current claim vs current reality)
+    - GOOD: "Claims AI-powered, recent HN thread says AI features are broken/useless"
+      -> VALID (current claim vs current user experience)
+    - BAD: "Claims turnaround/recovery, HN thread from 2 years ago says they went
+      bankrupt" -> NOT a contradiction. The company publicly acknowledges the past
+      trouble; the recovery claim presupposes it. Past problems + present recovery
+      claims = expected narrative, not a contradiction.
+    - BAD: "Claims growth, HN thread from 5 years ago about CEO stepping down"
+      -> NOT a contradiction. Ancient history.
+
+    Historical events the company has publicly acknowledged (past bankruptcy, past
+    layoffs, past pivots, past leadership changes) are NOT contradictions of present
+    claims. They are CONTEXT. Use them to inform the sales_strategy.avoid_topics
+    and timing_assessment fields, but do NOT flag them as contradictions.
+
+    When community data IS used for contradiction detection:
+    - Source it as "Hacker News community discussions"
+    - Include "Hacker News community discussions" in sources_used
+    - The contradiction must reference a SPECIFIC recent discussion or finding
+
+    INTERNAL CONSISTENCY RULE:
+    Before returning, check that signals and contradictions do not conflict. If a
+    signal says "Company recognized for successful turnaround" and a contradiction
+    says "Company had financial troubles in the past," those are inconsistent.
+    Remove the weaker one. The output should present a coherent picture, not
+    contradictory guidance to an AI sales agent consuming this JSON.
 
 SIGNALS (things that imply CURRENT MOTION, not static facts):
 For each potential signal, ask: "When did this become true?"
