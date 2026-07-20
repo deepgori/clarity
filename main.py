@@ -135,6 +135,13 @@ async def health_check():
     return {"status": "healthy", "service": "clarity-api"}
 
 
+@app.post("/admin/clear-cache")
+async def admin_clear_cache(_key: str | None = Depends(verify_api_key)):
+    """Clear the response cache. Requires API key."""
+    from cache import clear_cache
+    clear_cache()
+    return {"status": "cache_cleared"}
+
 @app.get("/costs")
 async def get_costs(_key: str | None = Depends(verify_api_key)):
     """Get cumulative OpenAI spend stats. Requires API key."""
