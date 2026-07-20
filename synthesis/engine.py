@@ -128,16 +128,40 @@ Not "limited evidence" but "evidence pointing the opposite direction."
 
   ZERO JOB LISTINGS RULE:
     If the external job postings section says "ZERO job listings found across all
-    checked ATS platforms" AND the company's website claims active growth, expansion,
-    scaling, momentum, or hiring: this IS a potential contradiction. The absence of
-    external hiring across Greenhouse, Lever, AND Ashby, combined with growth claims,
-    suggests either a hiring freeze, financial constraints, or the growth narrative
-    may not reflect current operational reality.
-    - Source this as: "External Job Postings (zero listings across Greenhouse, Lever, Ashby)"
-    - This is ESPECIALLY significant for companies that have had public financial
-      difficulties, layoffs, or restructuring events mentioned in the news.
-    - Do NOT flag this if the company is a small startup (seed/pre-seed) where minimal
-      hiring is normal, OR if the website does not make growth/expansion claims.
+    checked ATS platforms," the meaning depends on company size and stage:
+
+    FOR STARTUPS AND MID-MARKET (Seed, Series A/B/C, Growth stage):
+    Greenhouse, Lever, and Ashby have high coverage of this segment. Zero listings
+    combined with growth claims IS a valid contradiction. Flag it.
+    - Source as: "External Job Postings (zero listings across Greenhouse, Lever, Ashby)"
+
+    FOR PUBLIC COMPANIES OR LARGE ENTERPRISES:
+    If you classify the company's stage as "Public" or it is clearly a large
+    enterprise (Fortune 500, thousands of employees, household name):
+    NEVER use "zero ATS listings" as claim_b in a contradiction. These companies
+    use Workday, Taleo, or SuccessFactors -- not Greenhouse/Lever/Ashby. Zero
+    results on our checked platforms is meaningless for them.
+    Instead: add "Hiring data unavailable - company likely uses enterprise ATS
+    platforms" to the hiring_signals array. Do NOT create a contradiction.
+
+    Examples:
+    - Salesforce (Public, 70k employees): zero ATS -> NO contradiction, add hiring note
+    - Zoom (Public, 9k employees): zero ATS -> NO contradiction, add hiring note
+    - Google, Microsoft, Amazon: zero ATS -> NO contradiction, add hiring note
+
+    SOLE EXCEPTION for large companies: If news articles, HN community discussions,
+    or GitHub data independently show concrete distress (recent layoffs reported in
+    news, bankruptcy, mass departures), you may create a contradiction using THAT
+    source as claim_b -- NOT the zero ATS data. The distress source is the evidence;
+    zero ATS is merely consistent with it. Example:
+    - WeWork (Late-stage, post-bankruptcy): news reports bankruptcy + growth claims
+      -> contradiction sourced from NEWS, not from ATS data.
+
+    FOR ALL COMPANIES:
+    - Do NOT flag this if the company is a small startup (seed/pre-seed) where
+      minimal hiring is normal.
+    - Do NOT flag this if the website does not make growth/expansion claims.
+
 
   COMMUNITY DISCUSSIONS AS CONTRADICTION EVIDENCE (Hacker News):
     The community discussions section contains real public discussions about this
