@@ -28,6 +28,7 @@ from sources.news import fetch_news
 from sources.github import fetch_github, refetch_github_with_website_hint
 from sources.careers import extract_careers_data, format_careers_for_synthesis
 from sources.jobs import fetch_jobs
+from sources.community import fetch_community
 from synthesis.engine import synthesize_intelligence
 from agent import generate_generic_email, generate_clarity_email
 from cache import get_cached, set_cached
@@ -222,6 +223,7 @@ async def analyze_company(
             fetch_news(domain.split(".")[0], domain),
             fetch_github(domain),
             fetch_jobs(domain),
+            fetch_community(domain),
         ]
 
         seller_content = None
@@ -249,9 +251,10 @@ async def analyze_company(
         news_result = results[1]
         github_result = results[2]
         jobs_result = results[3]
+        community_result = results[4]
 
-        if request.seller_domain and len(results) > 4:
-            seller_result = results[4]
+        if request.seller_domain and len(results) > 5:
+            seller_result = results[5]
             if seller_result.fetched:
                 seller_content = seller_result.content
                 logger.info(f"Seller website fetched ({len(seller_content)} chars)")
@@ -260,7 +263,8 @@ async def analyze_company(
             f"Website: {'ok' if website_result.fetched else 'miss'} | "
             f"News: {'ok' if news_result.fetched else 'miss'} | "
             f"GitHub: {'ok' if github_result.fetched else 'miss'} | "
-            f"Jobs: {'ok' if jobs_result.fetched else 'miss'}"
+            f"Jobs: {'ok' if jobs_result.fetched else 'miss'} | "
+            f"Community: {'ok' if community_result.fetched else 'miss'}"
         )
         logger.info(f"Source results: {sources_status}")
 
@@ -328,6 +332,7 @@ async def analyze_company(
                     news_result=news_result,
                     github_result=github_result,
                     jobs_result=jobs_result,
+                    community_result=community_result,
                     seller_content=seller_content,
                     context=request.context,
                     careers_data=careers_formatted,

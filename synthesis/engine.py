@@ -215,6 +215,9 @@ COMPANY DOMAIN: {domain}
 --- EXTERNAL JOB POSTINGS (from ATS platforms) ---
 {jobs_content}
 
+--- COMMUNITY DISCUSSIONS (Hacker News) ---
+{community_content}
+
 === END SOURCE DATA ===
 
 Generate the CompanyIntelligence JSON object. Pay special attention to:
@@ -226,10 +229,16 @@ Generate the CompanyIntelligence JSON object. Pay special attention to:
 3. Cross-reference website claims against EXTERNAL JOB POSTINGS. Job descriptions
    reveal what a company is actually building, regardless of GitHub privacy.
    Example: if the website says "AI-powered" but zero job postings mention ML/AI.
-4. Use hiring patterns (departments, locations, seniority) as signals of company priorities.
-5. When GitHub is sparse but job postings are available, use job data as primary tech evidence.
-6. Specific, actionable sales strategy based on observable evidence.
-7. Honest confidence scoring based on data quality."""
+4. Cross-reference website claims against COMMUNITY DISCUSSIONS. HN threads reveal
+   what technical users actually think about the company. If a company claims
+   "enterprise-ready" but HN discussions describe scaling issues, reliability
+   problems, or data loss, that is a genuine contradiction worth surfacing.
+   Community sentiment contradictions are ESPECIALLY powerful because they come
+   from real users, not the company's own marketing.
+5. Use hiring patterns (departments, locations, seniority) as signals of company priorities.
+6. When GitHub is sparse but job postings are available, use job data as primary tech evidence.
+7. Specific, actionable sales strategy based on observable evidence.
+8. Honest confidence scoring based on data quality."""
 
 
 # JSON schema for structured output, matches CompanyIntelligence Pydantic model
@@ -318,6 +327,7 @@ async def synthesize_intelligence(
     news_result: SourceResult,
     github_result: SourceResult,
     jobs_result: SourceResult | None = None,
+    community_result: SourceResult | None = None,
     seller_content: str | None = None,
     context: str | None = None,
     careers_data: str | None = None,
@@ -339,6 +349,12 @@ async def synthesize_intelligence(
         jobs_content = jobs_result.content
     else:
         jobs_content = "No external job board data found (checked Greenhouse, Lever, Ashby)."
+
+    # Community discussions from Hacker News
+    if community_result and not isinstance(community_result, Exception) and community_result.fetched:
+        community_content = community_result.content
+    else:
+        community_content = "No community discussion data available."
 
     selling_context = ""
     if seller_content:
@@ -368,6 +384,7 @@ async def synthesize_intelligence(
         github_content=github_content,
         careers_content=careers_content,
         jobs_content=jobs_content,
+        community_content=community_content,
     )
 
     logger.info(f"Sending synthesis request to OpenAI ({len(user_prompt)} chars)...")
