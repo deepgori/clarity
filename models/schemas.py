@@ -16,6 +16,7 @@ class SourceType(str, Enum):
     WEBSITE = "website"
     NEWS = "news"
     GITHUB = "github"
+    JOBS = "jobs"
 
 
 class SourceResult(BaseModel):

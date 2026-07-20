@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 SYNTHESIS_SYSTEM_PROMPT = """You are Clarity, an intelligence synthesis engine for AI sales agents.
 
-You receive raw data from multiple sources about a company (website, news, GitHub, structured careers data).
+You receive raw data from multiple sources about a company (website, news, GitHub, structured careers data, external job postings).
 Your job: produce intelligence that a human researcher would NOT find in 5 minutes of Googling.
 
 REASONING PROCESS (follow this in order):
@@ -39,11 +39,13 @@ For EACH claim you extracted, check whether the other sources SUPPORT or UNDERMI
     CHECK careers: Are they hiring DevRel, DevEx, or developer-facing roles?
     CHECK GitHub: Are public repos active? Are docs/SDKs recently updated?
     CHECK news: Any developer community mentions or conference presence?
+    CHECK job postings: Do external job listings emphasize developer tools, APIs, or DevRel?
 
   Website claim: "AI-powered"
     CHECK careers: Do engineering roles mention ML, AI, or data science?
     CHECK GitHub: Are there ML frameworks, model repos, or AI tooling?
     CHECK careers tech: Is Python/PyTorch/TensorFlow mentioned, or just React/Java?
+    CHECK job postings: Do ANY job descriptions across the company mention ML, LLMs, or AI?
 
   Website claim: "global platform"
     CHECK careers: Are jobs posted in multiple countries, or just one city?
@@ -73,20 +75,35 @@ Not "limited evidence" but "evidence pointing the opposite direction."
   - The sales_implication must change HOW you'd pitch, not just be an observation.
 
   FORBIDDEN - AUTOMATIC REJECTION:
-  Any contradiction where claim_b ONLY references the careers page, job postings,
-  or hiring must be REJECTED. Do not include it. Examples of FORBIDDEN contradictions:
+  Any contradiction where claim_b ONLY references the company's OWN CAREERS PAGE
+  being sparse, empty, or having few listings must be REJECTED. Examples:
   - "Claims growth but careers page shows no open positions" -> REJECT
-  - "Claims AI-powered but no open positions" -> REJECT
   - "Claims to be hiring but careers page is sparse" -> REJECT
-  These are NEVER valid because companies hire through recruiters, LinkedIn, or
-  may not be actively hiring. A sparse careers page proves nothing.
+  WHY: A company's own /careers page is often outdated. Companies hire through
+  recruiters, LinkedIn, or external job boards. A sparse careers page proves nothing.
 
-  VALID contradictions require evidence from GitHub, news, or specific product
-  claims that DIRECTLY CONTRADICT each other. Examples:
+  VALID - EXTERNAL JOB BOARD EVIDENCE (from Greenhouse, Lever, Ashby):
+  When EXTERNAL JOB POSTINGS data is available (sourced from ATS platforms, NOT
+  the company's own careers page), job postings ARE valid contradiction evidence.
+  External job boards contain real, structured, actively maintained listings.
+  Examples of VALID job-posting contradictions:
+  - "Claims AI-powered but ZERO out of 25+ external job postings mention AI, ML,
+    or data science" -> VALID (strong: structured evidence from real listings)
+  - "Claims developer-first but external job board shows 80% sales roles and 10%
+    engineering roles" -> VALID (department ratio contradicts positioning)
+  - "Claims rapid scaling but external job boards show zero open positions across
+    Greenhouse, Lever, and Ashby" -> VALID (stronger than sparse careers page)
+  - "Claims AI-first but job descriptions only mention React, Java, and SQL with
+    zero ML/AI frameworks" -> VALID (tech stack in job descriptions contradicts claim)
+
+  ALSO VALID - non-job-posting contradictions:
   - "Claims developer-first but GitHub repos abandoned for 8+ months" -> VALID
   - "Claims AI-powered but GitHub has no ML repos AND news mentions pivoting away from AI" -> VALID
   - "Claims open-source but all repos are archived" -> VALID
   - "Claims rapid growth but news articles mention layoffs" -> VALID
+
+  KEY DISTINCTION: "Careers page is empty" = WEAK, REJECT.
+  "External job board (Greenhouse/Lever/Ashby) shows 50+ roles with zero AI mentions" = STRONG, VALID.
 
   GITHUB ACTIVITY RULE: The data includes an ORG ACTIVITY SUMMARY with counts of
     active, stale, and abandoned repos. Use THIS summary to assess overall activity.
@@ -94,6 +111,20 @@ Not "limited evidence" but "evidence pointing the opposite direction."
     If ANY repos are marked ACTIVE (committed within 30 days), the org has recent GitHub
     activity. Only flag GitHub inactivity if the MAJORITY of checked repos are abandoned
     AND zero repos show recent commits.
+
+  EXTERNAL JOB POSTINGS AS CONTRADICTION EVIDENCE:
+    When external job posting data is available from ATS platforms, it is STRONG
+    evidence for contradiction detection. Specifically:
+    - If a company claims "AI-powered" or "AI-first" but ZERO job descriptions
+      across ALL departments mention ML, AI, LLMs, data science, PyTorch,
+      TensorFlow, or similar: this IS a contradiction. Source it as "External
+      Job Postings (Greenhouse/Lever/Ashby)."
+    - If a company claims "developer-first" but department breakdown shows
+      sales/GTM roles outnumber engineering roles 3:1: this IS a contradiction.
+    - If a company claims "rapid growth" or "scaling fast" but external job boards
+      show zero or minimal open positions: this IS a contradiction.
+    - The contradiction source_b should cite "External Job Postings" with the
+      specific ATS platform and number of roles analyzed.
 
 SIGNALS (things that imply CURRENT MOTION, not static facts):
 For each potential signal, ask: "When did this become true?"
@@ -168,6 +199,9 @@ COMPANY DOMAIN: {domain}
 --- STRUCTURED CAREERS DATA ---
 {careers_content}
 
+--- EXTERNAL JOB POSTINGS (from ATS platforms) ---
+{jobs_content}
+
 === END SOURCE DATA ===
 
 Generate the CompanyIntelligence JSON object. Pay special attention to:
@@ -176,9 +210,13 @@ Generate the CompanyIntelligence JSON object. Pay special attention to:
    Example: if the website says "AI-first" but no engineering roles mention ML/AI.
 2. Cross-reference website claims against GitHub commit activity. Are repos marked
    as "STALE" or "ABANDONED" while the website claims active open-source?
-3. Use hiring patterns (departments, locations, seniority) as signals of company priorities.
-4. Specific, actionable sales strategy based on observable evidence.
-5. Honest confidence scoring based on data quality."""
+3. Cross-reference website claims against EXTERNAL JOB POSTINGS. Job descriptions
+   reveal what a company is actually building, regardless of GitHub privacy.
+   Example: if the website says "AI-powered" but zero job postings mention ML/AI.
+4. Use hiring patterns (departments, locations, seniority) as signals of company priorities.
+5. When GitHub is sparse but job postings are available, use job data as primary tech evidence.
+6. Specific, actionable sales strategy based on observable evidence.
+7. Honest confidence scoring based on data quality."""
 
 
 # JSON schema for structured output, matches CompanyIntelligence Pydantic model
@@ -266,6 +304,7 @@ async def synthesize_intelligence(
     website_result: SourceResult,
     news_result: SourceResult,
     github_result: SourceResult,
+    jobs_result: SourceResult | None = None,
     seller_content: str | None = None,
     context: str | None = None,
     careers_data: str | None = None,
@@ -281,6 +320,12 @@ async def synthesize_intelligence(
     news_content = news_result.content if news_result.fetched else "No recent news found."
     github_content = github_result.content if github_result.fetched else "No GitHub presence found."
     careers_content = careers_data or "No structured careers data available."
+
+    # Job postings from external ATS platforms
+    if jobs_result and not isinstance(jobs_result, Exception) and jobs_result.fetched:
+        jobs_content = jobs_result.content
+    else:
+        jobs_content = "No external job board data found (checked Greenhouse, Lever, Ashby)."
 
     selling_context = ""
     if seller_content:
@@ -309,6 +354,7 @@ async def synthesize_intelligence(
         news_content=news_content,
         github_content=github_content,
         careers_content=careers_content,
+        jobs_content=jobs_content,
     )
 
     logger.info(f"Sending synthesis request to OpenAI ({len(user_prompt)} chars)...")
@@ -395,31 +441,39 @@ You previously analyzed this company and found NO contradictions. Look again mor
 
 PROCESS:
 1. Read the website content. List every positioning claim (e.g., "AI-powered", "developer-first", "open-source", "enterprise-ready", "global platform", "trusted by X customers").
-2. For EACH claim, check the careers page, GitHub activity, and news for evidence that SUPPORTS or UNDERMINES it.
+2. For EACH claim, check the careers page, GitHub activity, news, AND external job postings for evidence that SUPPORTS or UNDERMINES it.
 3. A contradiction exists ONLY when evidence ACTIVELY UNDERMINES a claim, not just "limited evidence."
 
 CONTRADICTION QUALITY HIERARCHY:
 TIER 1 (STRONG - report these): Specific product/technical claim contradicted by
-  specific technical evidence from 2+ sources. E.g. "Claims AI-powered but GitHub
-  shows no ML repos AND no AI-related job postings."
+  specific technical evidence from 2+ sources. Examples:
+  - "Claims AI-powered but GitHub shows no ML repos AND external job postings
+    (25+ roles analyzed) mention zero AI/ML technologies." 
+  - "Claims developer-first but external job board shows 80% sales roles and
+    GitHub repos are abandoned."
 TIER 2 (MODERATE - report if well-evidenced): Marketing claim contradicted by a
-  single strong counter-signal. E.g. "Claims developer-first but GitHub repos
-  abandoned for 8+ months."
-TIER 3 (WEAK - DO NOT REPORT): "Careers page shows few/no open positions."
-  This is NEVER a valid contradiction by itself. Companies hire through recruiters,
-  LinkedIn, or may legitimately not be hiring. Only use careers data to CORROBORATE
-  a stronger Tier 1 or Tier 2 finding.
+  single strong counter-signal from external job postings OR GitHub. Examples:
+  - "Claims AI-first but ZERO out of 30 external job descriptions mention ML, AI,
+    data science, PyTorch, or TensorFlow."
+  - "Claims developer-first but GitHub repos abandoned for 8+ months."
+  - "Claims rapid scaling but external job boards (Greenhouse, Lever, Ashby) show
+    zero open positions."
+TIER 3 (WEAK - DO NOT REPORT): "Company's OWN careers page shows few/no open positions."
+  A sparse /careers page is NEVER a valid contradiction by itself. Companies hire
+  through recruiters, LinkedIn, or external job boards.
+  IMPORTANT: This only applies to the company's own careers page, NOT to external
+  job board data from Greenhouse, Lever, or Ashby.
 
 EXAMPLES OF GENUINE CONTRADICTIONS:
-- Website says "AI-powered" but GitHub shows no ML repos AND careers has zero AI roles (Tier 1)
-- Claims "developer-first" but GitHub repos haven't been updated in months (Tier 2)
+- Website says "AI-powered" but external job postings show zero AI/ML roles across 25+ listings (Tier 1)
+- Claims "developer-first" but external job board department breakdown shows sales outnumber engineering 3:1 (Tier 2)
 - Says "trusted by 10,000+ companies" but no customer testimonials, case studies, or press exist (Tier 1)
 - Claims "open-source" but all repos are archived or inactive (Tier 2)
 - Claims rapid growth but news articles mention layoffs (Tier 1)
+- Claims "AI-first" but job descriptions only mention React, Java, SQL with zero ML frameworks (Tier 2)
 
 NOT CONTRADICTIONS (do not report):
-- "Claims X but careers page shows no open positions" (Tier 3, never standalone)
-- "Claims AI-powered but no open AI positions" (hiring is cyclical, not contradictory)
+- "Claims X but company's own careers page shows no open positions" (Tier 3, never standalone)
 - "Enterprise-ready but low GitHub activity" (enterprise code is proprietary)
 
 If you find a TIER 1 or TIER 2 contradiction, return it as JSON. If nothing genuine exists, return an empty array.

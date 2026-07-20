@@ -27,6 +27,7 @@ from sources.website import fetch_website
 from sources.news import fetch_news
 from sources.github import fetch_github, refetch_github_with_website_hint
 from sources.careers import extract_careers_data, format_careers_for_synthesis
+from sources.jobs import fetch_jobs
 from synthesis.engine import synthesize_intelligence
 from agent import generate_generic_email, generate_clarity_email
 from cache import get_cached, set_cached
@@ -220,6 +221,7 @@ async def analyze_company(
             fetch_website(domain),
             fetch_news(domain.split(".")[0], domain),
             fetch_github(domain),
+            fetch_jobs(domain),
         ]
 
         seller_content = None
@@ -246,9 +248,10 @@ async def analyze_company(
         website_result = results[0]
         news_result = results[1]
         github_result = results[2]
+        jobs_result = results[3]
 
-        if request.seller_domain and len(results) > 3:
-            seller_result = results[3]
+        if request.seller_domain and len(results) > 4:
+            seller_result = results[4]
             if seller_result.fetched:
                 seller_content = seller_result.content
                 logger.info(f"Seller website fetched ({len(seller_content)} chars)")
@@ -256,7 +259,8 @@ async def analyze_company(
         sources_status = (
             f"Website: {'ok' if website_result.fetched else 'miss'} | "
             f"News: {'ok' if news_result.fetched else 'miss'} | "
-            f"GitHub: {'ok' if github_result.fetched else 'miss'}"
+            f"GitHub: {'ok' if github_result.fetched else 'miss'} | "
+            f"Jobs: {'ok' if jobs_result.fetched else 'miss'}"
         )
         logger.info(f"Source results: {sources_status}")
 
@@ -323,6 +327,7 @@ async def analyze_company(
                     website_result=website_result,
                     news_result=news_result,
                     github_result=github_result,
+                    jobs_result=jobs_result,
                     seller_content=seller_content,
                     context=request.context,
                     careers_data=careers_formatted,
@@ -458,6 +463,7 @@ async def compare_emails(
             fetch_website(domain),
             fetch_news(domain.split(".")[0], domain),
             fetch_github(domain),
+            fetch_jobs(domain),
         ]
 
         seller_content = None
@@ -482,9 +488,10 @@ async def compare_emails(
         website_result = results[0]
         news_result = results[1]
         github_result = results[2]
+        jobs_result = results[3]
 
-        if seller_domain_str and len(results) > 3:
-            seller_result = results[3]
+        if seller_domain_str and len(results) > 4:
+            seller_result = results[4]
             if not isinstance(seller_result, Exception) and seller_result.fetched:
                 seller_content = seller_result.content
 
@@ -544,6 +551,7 @@ async def compare_emails(
                     website_result=website_result,
                     news_result=news_result if not isinstance(news_result, Exception) else news_result,
                     github_result=github_result if not isinstance(github_result, Exception) else github_result,
+                    jobs_result=jobs_result if not isinstance(jobs_result, Exception) else jobs_result,
                     seller_content=seller_content,
                     context=request.context,
                     careers_data=careers_formatted,
