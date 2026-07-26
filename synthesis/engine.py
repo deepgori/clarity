@@ -498,6 +498,11 @@ async def synthesize_intelligence(
     # Post-process: scrub banned phrases from text fields
     _scrub_synthesis_output(parsed)
 
+    # DETERMINISTIC FILTER: Enterprise ATS false-positive suppression
+    # The LLM prompt instructs this, but doesn't follow it reliably.
+    # This code-level filter is the hard gate.
+    _filter_enterprise_ats_contradictions(parsed)
+
     logger.info(
         f"Synthesis complete: {parsed.get('company_name', 'Unknown')} | "
         f"Confidence: {parsed.get('overall_confidence', 0)} | "
@@ -505,6 +510,79 @@ async def synthesize_intelligence(
     )
 
     return CompanyIntelligence(**parsed)
+
+
+def _filter_enterprise_ats_contradictions(parsed: dict) -> None:
+    """
+    Deterministic post-synthesis filter for ATS false positives.
+    
+    Two rules:
+    1. ENTERPRISE RULE: If stage is 'Public' or company is clearly large,
+       remove any contradiction whose claim_b references job listings,
+       job postings, ATS platforms, or job descriptions.
+    2. UNAVAILABLE-DATA RULE: If hiring_signals says data is 'unavailable',
+       remove any contradiction that draws inferences from job posting data.
+       You cannot cite evidence from a dataset that doesn't exist.
+    """
+    contradictions = parsed.get("contradictions", [])
+    if not contradictions:
+        return
+
+    stage = parsed.get("stage", "").lower()
+    hiring_signals = parsed.get("hiring_signals", [])
+    hiring_text = " ".join(str(s) for s in hiring_signals).lower()
+
+    # Detect enterprise context
+    is_enterprise = stage in ("public", "fortune 500", "enterprise")
+    hiring_unavailable = "unavailable" in hiring_text
+
+    if not is_enterprise and not hiring_unavailable:
+        return
+
+    # Keywords that indicate a contradiction is based on ATS/job data
+    job_data_keywords = [
+        "job listing", "job postings", "job descriptions", "job boards",
+        "ats platform", "greenhouse", "lever", "ashby",
+        "open positions", "external job", "hiring",
+        "zero job", "no job", "zero out of",
+        "no ai/ml", "no ai roles", "not mentioned across any job",
+    ]
+
+    original_count = len(contradictions)
+    filtered = []
+
+    for c in contradictions:
+        claim_b = c.get("claim_b", "").lower()
+        source_b = c.get("source_b", "").lower()
+        resolution = c.get("resolution", "").lower()
+        combined = f"{claim_b} {source_b} {resolution}"
+
+        is_job_based = any(kw in combined for kw in job_data_keywords)
+
+        if is_job_based and (is_enterprise or hiring_unavailable):
+            logger.info(
+                f"FILTERED contradiction (enterprise/unavailable rule): "
+                f"'{c.get('claim_a', '')[:60]}' vs '{c.get('claim_b', '')[:60]}'"
+            )
+            continue
+
+        filtered.append(c)
+
+    parsed["contradictions"] = filtered
+
+    if len(filtered) < original_count:
+        removed = original_count - len(filtered)
+        logger.info(f"Enterprise ATS filter removed {removed} contradiction(s)")
+
+        # Fix hiring_signals consistency: if we removed job-based contradictions
+        # and hiring is unavailable, ensure the message is correct
+        if hiring_unavailable and not any("operational constraints" in str(s).lower() for s in hiring_signals):
+            pass  # Already says unavailable, which is correct
+        elif is_enterprise and not hiring_unavailable:
+            # Enterprise but hiring wasn't marked unavailable -- fix it
+            parsed["hiring_signals"] = [
+                "Hiring data unavailable - company likely uses enterprise ATS platforms"
+            ]
 
 
 def _scrub_synthesis_output(parsed: dict) -> None:
