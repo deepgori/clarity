@@ -540,6 +540,10 @@ async def synthesize_intelligence(
     # This code-level filter is the hard gate.
     _filter_enterprise_ats_contradictions(parsed)
 
+    # DETERMINISTIC FIX: Force correct hiring_signals for enterprise companies
+    # and scrub any job-posting inferences that leaked into other fields.
+    _fix_enterprise_hiring_inference(parsed)
+
     logger.info(
         f"Synthesis complete: {parsed.get('company_name', 'Unknown')} | "
         f"Confidence: {parsed.get('overall_confidence', 0)} | "
@@ -621,6 +625,85 @@ def _filter_enterprise_ats_contradictions(parsed: dict) -> None:
                 "Hiring data unavailable - company likely uses enterprise ATS platforms"
             ]
 
+
+def _fix_enterprise_hiring_inference(parsed: dict) -> None:
+    """
+    Deterministic fix for enterprise hiring inference leaks.
+
+    When a company is Public/Enterprise and ATS data returned nothing,
+    this function:
+    1. Forces the correct hiring_signals message
+    2. Scrubs job-posting references from avoid_topics
+    3. Scrubs job-posting references from sales_strategy fields
+
+    This runs AFTER synthesis, so no prompt instruction can override it.
+    """
+    stage = parsed.get("stage", "").lower()
+    is_enterprise = stage in ("public", "fortune 500", "enterprise")
+
+    if not is_enterprise:
+        return
+
+    hiring_signals = parsed.get("hiring_signals", [])
+    hiring_text = " ".join(str(s) for s in hiring_signals).lower()
+
+    # Detect if the model wrote something other than the standard message
+    standard_msg = "hiring data unavailable - company likely uses enterprise ats platforms"
+    has_standard = standard_msg in hiring_text
+
+    # Keywords that indicate the model fabricated a hiring inference
+    bad_keywords = [
+        "no listings", "zero listings", "no job", "zero job",
+        "operational constraints", "lack of", "hiring practices",
+        "no external job", "not found on", "no postings",
+    ]
+    has_bad_inference = any(kw in hiring_text for kw in bad_keywords)
+
+    if has_bad_inference or not has_standard:
+        # Force the correct message
+        parsed["hiring_signals"] = [
+            "Hiring data unavailable - company likely uses enterprise ATS platforms"
+        ]
+        logger.info("Fixed enterprise hiring_signals (was fabricating inference from empty data)")
+
+    # Scrub avoid_topics that reference hiring/job postings
+    strategy = parsed.get("sales_strategy", {})
+    if isinstance(strategy, dict):
+        avoid = strategy.get("avoid_topics", [])
+        if isinstance(avoid, list):
+            scrubbed_avoid = []
+            for topic in avoid:
+                topic_lower = str(topic).lower()
+                if any(kw in topic_lower for kw in [
+                    "hiring", "job posting", "job listing", "ats",
+                    "lack of external", "operational constraints",
+                ]):
+                    logger.info(f"Scrubbed avoid_topic: '{topic[:60]}'")
+                    continue
+                scrubbed_avoid.append(topic)
+            strategy["avoid_topics"] = scrubbed_avoid
+
+        # Scrub sales strategy text fields that reference hiring
+        for field in ["recommended_angle", "conversation_starter", "timing_assessment",
+                       "relevance_reasoning"]:
+            value = strategy.get(field, "")
+            if isinstance(value, str):
+                value_lower = value.lower()
+                if any(kw in value_lower for kw in [
+                    "lack of ai emphasis in job",
+                    "gap between claims and hiring",
+                    "job postings suggest",
+                    "hiring strategy",
+                    "lack of external job postings",
+                ]):
+                    logger.info(f"Scrubbed job-inference from sales_strategy.{field}")
+                    # Replace the problematic sentence rather than wiping the field
+                    import re
+                    value = re.sub(
+                        r'[^.]*(?:job posting|hiring|ats platform|lack of external)[^.]*\.\s*',
+                        '', value, flags=re.IGNORECASE
+                    )
+                    strategy[field] = value.strip() if value.strip() else strategy.get(field, "")
 
 def _scrub_synthesis_output(parsed: dict) -> None:
     """Post-process synthesis output to remove banned phrases the LLM ignores."""
