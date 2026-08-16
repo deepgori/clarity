@@ -284,6 +284,9 @@ COMPANY DOMAIN: {domain}
 --- COMMUNITY DISCUSSIONS (Hacker News) ---
 {community_content}
 
+--- CUSTOMER REVIEWS (G2, Capterra, Gartner, Reddit) ---
+{reviews_content}
+
 === END SOURCE DATA ===
 
 Generate the CompanyIntelligence JSON object. Pay special attention to:
@@ -306,7 +309,12 @@ Generate the CompanyIntelligence JSON object. Pay special attention to:
 7. Specific, actionable sales strategy based on observable evidence.
 8. Honest confidence scoring based on data quality.
 9. For data_freshness: use ONLY the "DATA FETCHED ON" date above. Format as
-   "Data is current as of {fetch_date}". Do NOT hallucinate or invent a date."""
+   "Data is current as of {fetch_date}". Do NOT hallucinate or invent a date.
+10. CUSTOMER REVIEWS: Use review platform ratings (G2, Capterra, Gartner, Trustpilot)
+    as signals and context for outreach angles. If reviews reveal consistent complaints
+    (e.g., pricing, UX, reliability) that contradict website claims, surface them as
+    signals. Only flag as a contradiction if the review evidence is corroborated by
+    at least one other source (news, GitHub, jobs, HN)."""
 
 
 # JSON schema for structured output, matches CompanyIntelligence Pydantic model
@@ -396,6 +404,7 @@ async def synthesize_intelligence(
     github_result: SourceResult,
     jobs_result: SourceResult | None = None,
     community_result: SourceResult | None = None,
+    reviews_result: SourceResult | None = None,
     seller_content: str | None = None,
     context: str | None = None,
     careers_data: str | None = None,
@@ -423,6 +432,12 @@ async def synthesize_intelligence(
         community_content = community_result.content
     else:
         community_content = "No community discussion data available."
+
+    # Customer reviews from review platforms
+    if reviews_result and not isinstance(reviews_result, Exception) and reviews_result.fetched:
+        reviews_content = reviews_result.content
+    else:
+        reviews_content = "No customer review data available."
 
     selling_context = ""
     if seller_content:
@@ -457,6 +472,7 @@ async def synthesize_intelligence(
         careers_content=careers_content,
         jobs_content=jobs_content,
         community_content=community_content,
+        reviews_content=reviews_content,
     )
 
     logger.info(f"Sending synthesis request to OpenAI ({len(user_prompt)} chars)...")
