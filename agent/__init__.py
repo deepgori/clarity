@@ -41,37 +41,50 @@ SIGNALS (recent moves, non-obvious patterns):
 CONTRADICTIONS (tensions between claims and behavior):
 {contradictions_text}
 
-TECH STACK: {tech_stack}
-
-HIRING PATTERNS: {hiring_signals}
+CUSTOMER REVIEW DATA:
+{review_signals}
 
 RECOMMENDED ANGLE: {recommended_angle}
+CONVERSATION STARTER (use this or improve it): {conversation_starter}
+WHY THIS ANGLE (the evidence): {relevance_reasoning}
 TIMING: {timing}
 TARGET PERSONA: {decision_maker}
+TOPICS TO AVOID: {avoid_topics}
 
-STRICT RULES:
-1. OPENING LINE: Start with a specific, non-obvious observation. NOT their revenue, scale,
-   or most famous product metric. Reference a signal, a contradiction, a hiring pattern,
-   or a recent move that most people wouldn't notice. The reader should think "they actually
-   looked into us" within the first sentence.
-2. NEVER open with a compliment about their size, revenue, volume, or uptime. Every email
-   they get starts this way. Do the opposite.
-3. Connect your observation to a specific problem they likely face right now.
-4. Show exactly how your product solves THAT specific problem (not generically).
-5. Keep it under 80 words. Shorter is better. Busy people skim.
-6. End with a low-friction ask. Not "can I get 30 minutes" but something like
-   "worth a 5-min look?" or a specific question they'd want to answer.
-7. BANNED PHRASES (do NOT use any form of these, including plurals or without pronouns):
-   "noticed", "I noticed", "I came across", "I hope this finds you well",
-   "I wanted to reach out", "leverage", "synergy", "synergies", "impressive",
-   "remarkable", "congratulations", "congrats", "kudos", "game-changing",
-   "game changer", "revolutionize", "transform". Do NOT start with any variant of "noticed".
-8. Do NOT use em dashes.
-9. Sound like a sharp peer, not a salesperson. No corporate buzzwords.
-10. No subject line, just the body.
-11. NEVER use placeholder brackets like [Name], [CTO's Name], [Your Name], [Company].
-    Write the email as a ready-to-send body with no blanks to fill in.
-    If you don't know someone's name, don't address anyone by name."""
+EMAIL STRUCTURE (follow this exactly):
+1. OPENING LINE: Use the conversation_starter above or write something better. The opening
+   must reference a SPECIFIC data point — a review rating, a contradiction, a recent move,
+   or a hiring pattern. Not a compliment. Not a generic observation. A fact that shows
+   you did research they didn't expect.
+   
+   GOOD: "Your Gartner rating is 4.5 but Trustpilot is 1.8 — that gap usually means
+          enterprise buyers are happy but self-serve users aren't."
+   GOOD: "Consolidating under 'Chewy Made' while expanding Vet Care to Cedar Park suggests
+          you're betting on brand loyalty. Your Trustpilot 3.3 says it's not there yet."
+   BAD:  "Your company is doing great things in the monitoring space."
+   BAD:  "As you continue to grow..."
+
+2. BRIDGE: In ONE sentence, connect the observation to a specific problem they likely face.
+   This must be a logical inference from the data, not a generic claim.
+
+3. PITCH: In ONE sentence, show how your product solves THAT specific problem.
+   Not "we help companies like yours" — specifically how YOUR tool addresses THEIR issue.
+
+4. ASK: Low-friction close. "Worth a 5-min look?" or a question they'd want to answer.
+
+HARD CONSTRAINTS:
+- Under 80 words total. Shorter is better. Busy people skim.
+- BANNED PHRASES (never use any form of these):
+  "noticed", "I noticed", "I came across", "I hope this finds you well",
+  "I wanted to reach out", "leverage", "synergy", "synergies", "impressive",
+  "remarkable", "congratulations", "congrats", "kudos", "game-changing",
+  "game changer", "revolutionize", "transform". Do NOT start with any variant of "noticed".
+- No em dashes.
+- Sound like a sharp peer, not a salesperson. No corporate buzzwords.
+- No subject line, just the body.
+- NEVER use placeholder brackets like [Name], [CTO's Name], [Your Name], [Company].
+  Write the email as a ready-to-send body with no blanks to fill in.
+  If you don't know someone's name, don't address anyone by name."""
 
 
 async def generate_generic_email(
@@ -112,14 +125,22 @@ async def generate_clarity_email(
         for s in intelligence.signals
     ) or "None detected"
 
+    # Extract review-specific signals for the email
+    review_signals = "\n".join(
+        f"- {s.signal}"
+        for s in intelligence.signals
+        if any(kw in s.signal.lower() for kw in [
+            "trustpilot", "g2", "gartner", "capterra", "review", "rating",
+            "reddit", "glassdoor", "trustradius",
+        ])
+    ) or "No customer review data available"
+
     contradictions_text = "\n".join(
         f"- They claim: '{c.claim_a}' BUT evidence shows: '{c.claim_b}' -> Opportunity: {c.sales_implication}"
         for c in intelligence.contradictions
     ) or "None detected"
 
     avoid_topics = ", ".join(intelligence.sales_strategy.avoid_topics) or "None"
-    hiring_signals = ", ".join(intelligence.hiring_signals) or "None detected"
-    tech_stack = ", ".join(intelligence.tech_stack) or "Unknown"
 
     response = await client.chat.completions.create(
         model="gpt-4o",
@@ -133,11 +154,13 @@ async def generate_clarity_email(
                 selling=selling,
                 signals_text=signals_text,
                 contradictions_text=contradictions_text,
-                tech_stack=tech_stack,
+                review_signals=review_signals,
                 recommended_angle=intelligence.sales_strategy.recommended_angle,
+                conversation_starter=intelligence.sales_strategy.conversation_starter,
+                relevance_reasoning=intelligence.sales_strategy.relevance_reasoning,
                 timing=intelligence.sales_strategy.timing_assessment,
                 decision_maker=intelligence.sales_strategy.decision_maker_profile,
-                hiring_signals=hiring_signals,
+                avoid_topics=avoid_topics,
             )},
         ],
         temperature=0.7,
