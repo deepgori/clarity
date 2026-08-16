@@ -310,11 +310,20 @@ Generate the CompanyIntelligence JSON object. Pay special attention to:
 8. Honest confidence scoring based on data quality.
 9. For data_freshness: use ONLY the "DATA FETCHED ON" date above. Format as
    "Data is current as of {fetch_date}". Do NOT hallucinate or invent a date.
-10. CUSTOMER REVIEWS: Use review platform ratings (G2, Capterra, Gartner, Trustpilot)
-    as signals and context for outreach angles. If reviews reveal consistent complaints
-    (e.g., pricing, UX, reliability) that contradict website claims, surface them as
-    signals. Only flag as a contradiction if the review evidence is corroborated by
-    at least one other source (news, GitHub, jobs, HN)."""
+10. CUSTOMER REVIEWS ARE CRITICAL EVIDENCE. When review data is available:
+    a) ALWAYS include at least one signal about customer review ratings. Example:
+       "G2 rating: 4.5/5 from 1,561 reviews; Trustpilot: 1.8/5 from 23 reviews"
+       and note what the discrepancy implies (e.g. verified enterprise users rate
+       highly while consumer-facing reviews are poor).
+    b) ALWAYS include "Customer Reviews" in sources_used when review data is present.
+    c) Use Reddit thread titles and snippets as community sentiment evidence.
+    d) Use "People Also Ask" questions as buyer concern signals — they reveal what
+       prospects are actually wondering (e.g. "Why is HubSpot falling?" is a red flag).
+    e) If review ratings contradict website claims AND are corroborated by at least
+       one other source, flag as a contradiction. Example: website says "loved by
+       customers" but Trustpilot is 1.6/5 AND news mentions customer churn.
+    f) Use review data to inform outreach angles in sales_strategy. A low Trustpilot
+       score or common complaint is an excellent conversation opener."""
 
 
 # JSON schema for structured output, matches CompanyIntelligence Pydantic model
