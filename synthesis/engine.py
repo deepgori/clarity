@@ -144,6 +144,17 @@ Not "limited evidence" but "evidence pointing the opposite direction."
     Instead: add "Hiring data unavailable - company likely uses enterprise ATS
     platforms" to the hiring_signals array. Do NOT create a contradiction.
 
+    GLOBAL ABSENCE-INFERENCE GUARD:
+    When hiring data is marked as unavailable ("Hiring data unavailable - company
+    likely uses enterprise ATS platforms"), this rule applies to THE ENTIRE RESPONSE,
+    not just the contradictions field. Specifically:
+    - Do NOT reference "lack of AI emphasis in job postings" in sales_strategy.
+    - Do NOT mention job posting content in recommended_angle or conversation_starter.
+    - Do NOT use absence of job data as evidence in relevance_reasoning.
+    - Do NOT suggest "gap between claims and hiring" when no hiring data exists.
+    The rule is simple: if you have no job posting data, you may not make ANY claim
+    about what job postings do or do not contain, in ANY field of the response.
+
     Examples:
     - Salesforce (Public, 70k employees): zero ATS -> NO contradiction, add hiring note
     - Zoom (Public, 9k employees): zero ATS -> NO contradiction, add hiring note
@@ -311,10 +322,11 @@ Generate the CompanyIntelligence JSON object. Pay special attention to:
 9. For data_freshness: use ONLY the "DATA FETCHED ON" date above. Format as
    "Data is current as of {fetch_date}". Do NOT hallucinate or invent a date.
 10. CUSTOMER REVIEWS ARE CRITICAL EVIDENCE. When review data is available:
-    a) ALWAYS include at least one signal about customer review ratings. Example:
-       "G2 rating: 4.5/5 from 1,561 reviews; Trustpilot: 1.8/5 from 23 reviews"
-       and note what the discrepancy implies (e.g. verified enterprise users rate
-       highly while consumer-facing reviews are poor).
+    a) ALWAYS include at least one signal about customer review ratings, WHETHER
+       POSITIVE OR NEGATIVE. A company with strong reviews (4.5/5 on G2) is just
+       as important to surface as one with poor reviews (1.6/5 on Trustpilot).
+       Positive ratings indicate customer satisfaction — useful for competitive
+       positioning. Negative ratings indicate pain points — useful for outreach.
     b) ALWAYS include "Customer Reviews" in sources_used when review data is present.
     c) Use Reddit thread titles and snippets as community sentiment evidence.
     d) Use "People Also Ask" questions as buyer concern signals — they reveal what
@@ -323,7 +335,9 @@ Generate the CompanyIntelligence JSON object. Pay special attention to:
        one other source, flag as a contradiction. Example: website says "loved by
        customers" but Trustpilot is 1.6/5 AND news mentions customer churn.
     f) Use review data to inform outreach angles in sales_strategy. A low Trustpilot
-       score or common complaint is an excellent conversation opener."""
+       score or common complaint is an excellent conversation opener.
+    g) When ratings diverge across platforms (e.g. G2 4.5/5 but Trustpilot 1.8/5),
+       note the discrepancy and what it implies about different user segments."""
 
 
 # JSON schema for structured output, matches CompanyIntelligence Pydantic model
