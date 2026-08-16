@@ -81,6 +81,10 @@ async def _fetch_via_duckduckgo(company_name: str, domain: str) -> str | None:
     """Fallback 1: Search DuckDuckGo for recent news about the company."""
     try:
         from duckduckgo_search import DDGS
+    except ImportError:
+        logger.info("duckduckgo-search not installed, skipping DDG fallback")
+        return None
+    try:
         ddgs = DDGS()
         news_results = ddgs.news(
             f"{company_name} {domain}",
