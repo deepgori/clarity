@@ -29,7 +29,6 @@ from sources.github import fetch_github, refetch_github_with_website_hint
 from sources.careers import extract_careers_data, format_careers_for_synthesis
 from sources.jobs import fetch_jobs
 from sources.community import fetch_community
-from sources.reviews import fetch_reviews
 from synthesis.engine import synthesize_intelligence
 from agent import generate_generic_email, generate_clarity_email
 from cache import get_cached, set_cached
@@ -201,7 +200,6 @@ async def _run_analysis(
         fetch_github(domain),
         fetch_jobs(domain),
         fetch_community(domain),
-        fetch_reviews(domain),
     ]
 
     if seller_domain_str:
@@ -223,12 +221,11 @@ async def _run_analysis(
     github_result = results[2]
     jobs_result = results[3]
     community_result = results[4]
-    reviews_result = results[5]
 
     # Extract seller content if fetched
     seller_content = None
-    if seller_domain_str and len(results) > 6:
-        seller_result = results[6]
+    if seller_domain_str and len(results) > 5:
+        seller_result = results[5]
         if not isinstance(seller_result, Exception) and seller_result.fetched:
             seller_content = seller_result.content
             logger.info(f"Seller website fetched ({len(seller_content)} chars)")
@@ -242,8 +239,7 @@ async def _run_analysis(
         f"News: {'ok' if _source_ok(news_result) else 'miss'} | "
         f"GitHub: {'ok' if _source_ok(github_result) else 'miss'} | "
         f"Jobs: {'ok' if _source_ok(jobs_result) else 'miss'} | "
-        f"Community: {'ok' if _source_ok(community_result) else 'miss'} | "
-        f"Reviews: {'ok' if _source_ok(reviews_result) else 'miss'}"
+        f"Community: {'ok' if _source_ok(community_result) else 'miss'}"
     )
     logger.info(f"Source results: {sources_status}")
 
@@ -301,7 +297,6 @@ async def _run_analysis(
     safe_github = github_result if not isinstance(github_result, Exception) else None
     safe_jobs = jobs_result if not isinstance(jobs_result, Exception) else None
     safe_community = community_result if not isinstance(community_result, Exception) else None
-    safe_reviews = reviews_result if not isinstance(reviews_result, Exception) else None
 
     try:
         intelligence = await asyncio.wait_for(
@@ -312,7 +307,6 @@ async def _run_analysis(
                 github_result=safe_github or website_result,
                 jobs_result=safe_jobs,
                 community_result=safe_community,
-                reviews_result=safe_reviews,
                 seller_content=seller_content,
                 context=context,
                 careers_data=careers_formatted,

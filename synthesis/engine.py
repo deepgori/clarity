@@ -97,20 +97,10 @@ Not "limited evidence" but "evidence pointing the opposite direction."
     zero ML/AI frameworks" -> VALID (tech stack in job descriptions contradicts claim)
 
   ALSO VALID - non-job-posting contradictions:
-   - "Claims developer-first but GitHub repos abandoned for 8+ months" -> VALID
-   - "Claims AI-powered but GitHub has no ML repos AND news mentions pivoting away from AI" -> VALID
-   - "Claims open-source but all repos are archived" -> VALID
-   - "Claims rapid growth but news articles mention layoffs" -> VALID
-
-   ALSO VALID - Customer review contradictions (G2, Capterra, Trustpilot):
-   When customer review data is available, it is STRONG evidence for contradiction
-   detection because it reflects ACTUAL USER EXPERIENCE, not marketing claims.
-   - "Claims easy onboarding but G2 reviews cite steep learning curve" -> VALID
-   - "Claims reliable/99.9% uptime but customer reviews mention frequent outages" -> VALID
-   - "Claims great support but review platforms show support complaints" -> VALID
-   - "Claims intuitive UX but reviews consistently mention clunky interface" -> VALID
-   - Low star ratings (below 3.5/5) combined with strong marketing claims -> worth surfacing
-   Source as: "Customer Reviews (G2/Capterra/Trustpilot)"
+  - "Claims developer-first but GitHub repos abandoned for 8+ months" -> VALID
+  - "Claims AI-powered but GitHub has no ML repos AND news mentions pivoting away from AI" -> VALID
+  - "Claims open-source but all repos are archived" -> VALID
+  - "Claims rapid growth but news articles mention layoffs" -> VALID
 
   KEY DISTINCTION: "Careers page is empty" = WEAK, REJECT.
   "External job board (Greenhouse/Lever/Ashby) shows 50+ roles with zero AI mentions" = STRONG, VALID.
@@ -294,9 +284,6 @@ COMPANY DOMAIN: {domain}
 --- COMMUNITY DISCUSSIONS (Hacker News) ---
 {community_content}
 
---- CUSTOMER REVIEWS (G2, Capterra, Trustpilot) ---
-{reviews_content}
-
 === END SOURCE DATA ===
 
 Generate the CompanyIntelligence JSON object. Pay special attention to:
@@ -319,11 +306,7 @@ Generate the CompanyIntelligence JSON object. Pay special attention to:
 7. Specific, actionable sales strategy based on observable evidence.
 8. Honest confidence scoring based on data quality.
 9. For data_freshness: use ONLY the "DATA FETCHED ON" date above. Format as
-   "Data is current as of {fetch_date}". Do NOT hallucinate or invent a date.
-10. Cross-reference website claims against CUSTOMER REVIEWS. Review platforms
-    reveal real user experience. If a company claims "easy to use" or
-    "reliable" but reviews consistently mention complexity, bugs, or
-    outages, that is a genuine contradiction worth surfacing."""
+   "Data is current as of {fetch_date}". Do NOT hallucinate or invent a date."""
 
 
 # JSON schema for structured output, matches CompanyIntelligence Pydantic model
@@ -413,7 +396,6 @@ async def synthesize_intelligence(
     github_result: SourceResult,
     jobs_result: SourceResult | None = None,
     community_result: SourceResult | None = None,
-    reviews_result: SourceResult | None = None,
     seller_content: str | None = None,
     context: str | None = None,
     careers_data: str | None = None,
@@ -441,12 +423,6 @@ async def synthesize_intelligence(
         community_content = community_result.content
     else:
         community_content = "No community discussion data available."
-
-    # Customer reviews from G2, Capterra, Trustpilot
-    if reviews_result and not isinstance(reviews_result, Exception) and reviews_result.fetched:
-        reviews_content = reviews_result.content
-    else:
-        reviews_content = "No customer review data available."
 
     selling_context = ""
     if seller_content:
@@ -481,7 +457,6 @@ async def synthesize_intelligence(
         careers_content=careers_content,
         jobs_content=jobs_content,
         community_content=community_content,
-        reviews_content=reviews_content,
     )
 
     logger.info(f"Sending synthesis request to OpenAI ({len(user_prompt)} chars)...")
@@ -541,94 +516,73 @@ def _filter_enterprise_ats_contradictions(parsed: dict) -> None:
     """
     Deterministic post-synthesis filter for ATS false positives.
     
-    Runs on ALL outputs. Two jobs:
-    1. Remove any contradiction based on ATS/job data when the company is
-       enterprise or hiring data is effectively unavailable.
-    2. Fix hiring_signals text: replace 'operational constraints' framing
-       with 'unavailable' when there's no real distress evidence.
+    Two rules:
+    1. ENTERPRISE RULE: If stage is 'Public' or company is clearly large,
+       remove any contradiction whose claim_b references job listings,
+       job postings, ATS platforms, or job descriptions.
+    2. UNAVAILABLE-DATA RULE: If hiring_signals says data is 'unavailable',
+       remove any contradiction that draws inferences from job posting data.
+       You cannot cite evidence from a dataset that doesn't exist.
     """
+    contradictions = parsed.get("contradictions", [])
+    if not contradictions:
+        return
+
     stage = parsed.get("stage", "").lower()
     hiring_signals = parsed.get("hiring_signals", [])
     hiring_text = " ".join(str(s) for s in hiring_signals).lower()
-    contradictions = parsed.get("contradictions", [])
 
-    # Detect enterprise context — multiple signals, not just stage
+    # Detect enterprise context
     is_enterprise = stage in ("public", "fortune 500", "enterprise")
+    hiring_unavailable = "unavailable" in hiring_text
 
-    # Hiring data is effectively unavailable if:
-    # - explicitly says "unavailable"
-    # - says "no listings found" (means ATS returned nothing)
-    # - says "checked ATS platforms" (means we checked and found nothing)
-    hiring_unavailable = any(phrase in hiring_text for phrase in [
-        "unavailable",
-        "no listings found",
-        "checked ats",
-        "zero listings",
-    ])
+    if not is_enterprise and not hiring_unavailable:
+        return
 
-    # Detect if there are real distress signals from non-ATS sources
-    has_real_distress = False
+    # Keywords that indicate a contradiction is based on ATS/job data
+    job_data_keywords = [
+        "job listing", "job postings", "job descriptions", "job boards",
+        "ats platform", "greenhouse", "lever", "ashby",
+        "open positions", "external job", "hiring",
+        "zero job", "no job", "zero out of",
+        "no ai/ml", "no ai roles", "not mentioned across any job",
+    ]
+
+    original_count = len(contradictions)
+    filtered = []
+
     for c in contradictions:
-        source_b = c.get("source_b", "").lower()
         claim_b = c.get("claim_b", "").lower()
-        # Distress is real if it comes from news, community, or GitHub — not ATS
-        if any(s in source_b for s in ["news", "hacker news", "community", "github"]):
-            if any(w in claim_b for w in ["bankruptcy", "layoff", "mass departure", "shutdown"]):
-                has_real_distress = True
-                break
+        source_b = c.get("source_b", "").lower()
+        resolution = c.get("resolution", "").lower()
+        combined = f"{claim_b} {source_b} {resolution}"
 
-    # JOB 1: Filter ATS-based contradictions
-    if contradictions and (is_enterprise or hiring_unavailable):
-        job_data_keywords = [
-            "job listing", "job postings", "job descriptions", "job boards",
-            "ats platform", "greenhouse", "lever", "ashby",
-            "open positions", "external job", "zero job", "no job",
-            "no ai/ml", "no ai roles", "not mentioned across any job",
-            "hiring", "zero out of",
-        ]
+        is_job_based = any(kw in combined for kw in job_data_keywords)
 
-        original_count = len(contradictions)
-        filtered = []
+        if is_job_based and (is_enterprise or hiring_unavailable):
+            logger.info(
+                f"FILTERED contradiction (enterprise/unavailable rule): "
+                f"'{c.get('claim_a', '')[:60]}' vs '{c.get('claim_b', '')[:60]}'"
+            )
+            continue
 
-        for c in contradictions:
-            claim_b = c.get("claim_b", "").lower()
-            source_b = c.get("source_b", "").lower()
-            resolution = c.get("resolution", "").lower()
-            combined = f"{claim_b} {source_b} {resolution}"
+        filtered.append(c)
 
-            is_job_based = any(kw in combined for kw in job_data_keywords)
+    parsed["contradictions"] = filtered
 
-            if is_job_based:
-                logger.info(
-                    f"FILTERED contradiction (enterprise/unavailable rule): "
-                    f"'{c.get('claim_a', '')[:60]}' vs '{c.get('claim_b', '')[:60]}'"
-                )
-                continue
+    if len(filtered) < original_count:
+        removed = original_count - len(filtered)
+        logger.info(f"Enterprise ATS filter removed {removed} contradiction(s)")
 
-            filtered.append(c)
-
-        parsed["contradictions"] = filtered
-
-        if len(filtered) < original_count:
-            removed = original_count - len(filtered)
-            logger.info(f"Enterprise ATS filter removed {removed} contradiction(s)")
-
-    # JOB 2: Fix hiring_signals text
-    # If hiring data is effectively unavailable AND there's no real distress,
-    # replace any "operational constraints" framing with "unavailable"
-    if (is_enterprise or hiring_unavailable) and not has_real_distress:
-        bad_phrases = ["operational constraints", "operational constraint",
-                       "minimal or no active", "suggesting minimal"]
-        needs_fix = any(
-            any(bp in str(s).lower() for bp in bad_phrases)
-            for s in hiring_signals
-        )
-
-        if needs_fix or (is_enterprise and not any("unavailable" in str(s).lower() for s in hiring_signals)):
+        # Fix hiring_signals consistency: if we removed job-based contradictions
+        # and hiring is unavailable, ensure the message is correct
+        if hiring_unavailable and not any("operational constraints" in str(s).lower() for s in hiring_signals):
+            pass  # Already says unavailable, which is correct
+        elif is_enterprise and not hiring_unavailable:
+            # Enterprise but hiring wasn't marked unavailable -- fix it
             parsed["hiring_signals"] = [
                 "Hiring data unavailable - company likely uses enterprise ATS platforms"
             ]
-            logger.info("Fixed hiring_signals: replaced operational-constraints framing with unavailable")
 
 
 def _scrub_synthesis_output(parsed: dict) -> None:
