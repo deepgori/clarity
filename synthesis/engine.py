@@ -231,20 +231,37 @@ For each potential signal, ask: "When did this become true?"
   BAD: "Supports 135 currencies" (marketing copy from their homepage)
   BAD: "Active GitHub presence" (vague, not actionable)
 
-RELEVANCE SCORING (show your math):
-  Score 0-1 by mapping SPECIFIC seller capabilities to SPECIFIC target needs:
-  - "Seller offers X, target needs Y because [evidence], so relevance = Z"
-  - If weak fit, say WHY: "Seller does A but target already has B internally"
+RELEVANCE SCORING (evidence-based pain-point matching):
+  Follow this process STRICTLY:
+  1. IDENTIFY TARGET PAIN POINTS from the evidence. A pain point must come from
+     a signal, contradiction, review complaint, or community criticism. Examples:
+     "Trustpilot 1.8/5 suggests customer dissatisfaction" or "news reports customer
+     churn" or "community says pricing is unpredictable."
+  2. CHECK SELLER FIT against each pain point. Does the seller's product DIRECTLY
+     address this specific problem? Not tangentially, not theoretically — directly.
+  3. SCORE based on the strength of the mapping:
+     0.8-1.0: Seller solves a specific, evidenced pain point (e.g., target has
+       low satisfaction scores AND seller improves customer experience)
+     0.5-0.7: Seller is in the right space but no specific pain point found
+     0.2-0.4: Weak fit — seller and target are in different domains
+     0.0-0.1: No fit — seller has nothing to offer this company
+  4. If relevance < 0.5, say so honestly. "No clear pain point matching seller
+     capability was identified in the evidence" is MORE useful than a fabricated angle.
 
 SALES STRATEGY:
-  - recommended_angle: Reference a SPECIFIC finding from your cross-referencing
+  The sales strategy MUST be driven by evidence, not by bridging.
+  - recommended_angle: Must connect a SPECIFIC finding to a SPECIFIC seller capability.
+    If no specific connection exists, say "General awareness — no evidence-backed
+    angle identified" rather than manufacturing a rationale.
   - conversation_starter: Must reference something that would SURPRISE the prospect.
     Never open with their most famous metric or a compliment.
     BANNED PHRASES in conversation_starter (never use ANY form of these):
     "I noticed", "noticed", "I came across", "I hope this finds you well",
     "congratulations", "congrats", "impressive", "remarkable", "leverage", "synergies".
     Instead, start with a direct question or observation that implies insider knowledge.
-  - avoid_topics: Explain WHY each topic would backfire
+    If no surprising finding exists, use a question about a real signal instead.
+  - avoid_topics: Only include topics where discussing them would genuinely backfire.
+    Do NOT include obvious non-issues (e.g., "don't mention GitHub" for a pet retailer).
   - timing_assessment: Based on observable signals only, not speculation
 
 WRITING STYLE (applies to ALL text fields in the output):
@@ -677,6 +694,7 @@ def _fix_enterprise_hiring_inference(parsed: dict) -> None:
                 if any(kw in topic_lower for kw in [
                     "hiring", "job posting", "job listing", "ats",
                     "lack of external", "operational constraints",
+                    "lack of github", "github presence",
                 ]):
                     logger.info(f"Scrubbed avoid_topic: '{topic[:60]}'")
                     continue
