@@ -1,6 +1,6 @@
 # Clarity
 
-Company intelligence API for AI sales agents. One API call returns structured intelligence about any company — signals, contradictions, customer review sentiment, and evidence-backed outreach angles.
+Company intelligence API for AI sales agents. One API call returns structured intelligence about any company: signals, contradictions, customer review sentiment, and evidence-backed outreach angles.
 
 **Live at [clarityapi.co](https://clarityapi.co)**
 
@@ -8,13 +8,13 @@ Company intelligence API for AI sales agents. One API call returns structured in
 
 Clarity takes a target company domain, researches it across 7 data sources in parallel, and returns:
 
-- **Company profile** — industry, stage, and description
+- **Company profile**: industry, stage, and description
 - **Sales signals** with implications (e.g., "Trustpilot 1.8/5 vs Gartner 4.5/5" → "enterprise buyers happy, consumers aren't")
-- **Contradiction detection** — cross-references website claims against GitHub, news, jobs, community, and reviews
-- **Customer review sentiment** — ratings from G2, Gartner, Trustpilot, Capterra, and Reddit via SerpAPI
+- **Contradiction detection**: cross-references website claims against GitHub, news, jobs, community, and reviews
+- **Customer review sentiment**: ratings from G2, Gartner, Trustpilot, Capterra, and Reddit via SerpAPI
 - **Tech stack** extracted from GitHub repos
 - **Hiring patterns** from external ATS platforms (Greenhouse, Lever, Ashby)
-- **Evidence-based relevance scoring** — honest fit assessment that says "no angle identified" when the evidence doesn't support one
+- **Evidence-based relevance scoring**: honest fit assessment that says "no angle identified" when the evidence doesn't support one
 - **Suggested outreach email** that references specific findings, not generic bridges
 
 ## Quick start
@@ -119,9 +119,9 @@ Request → Parallel fetch (7 sources) → AI synthesis → Post-processing gate
 - Evidence-based relevance scoring (honest "no angle" when fit is weak)
 
 **Post-processing gates (deterministic, code-level):**
-- Enterprise ATS filter — suppresses false contradictions from missing job data for public companies
-- Hiring inference guard — prevents fabricated claims about job postings when no data exists
-- Banned phrase scrubber — removes AI-isms from output text
+- Enterprise ATS filter: suppresses false contradictions from missing job data for public companies
+- Hiring inference guard: prevents fabricated claims about job postings when no data exists
+- Banned phrase scrubber: removes AI-isms from output text
 
 ## Configuration
 

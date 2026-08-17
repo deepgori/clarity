@@ -53,11 +53,11 @@ TOPICS TO AVOID: {avoid_topics}
 
 EMAIL STRUCTURE (follow this exactly):
 1. OPENING LINE: Use the conversation_starter above or write something better. The opening
-   must reference a SPECIFIC data point — a review rating, a contradiction, a recent move,
+   must reference a SPECIFIC data point: a review rating, a contradiction, a recent move,
    or a hiring pattern. Not a compliment. Not a generic observation. A fact that shows
    you did research they didn't expect.
    
-   GOOD: "Your Gartner rating is 4.5 but Trustpilot is 1.8 — that gap usually means
+   GOOD: "Your Gartner rating is 4.5 but Trustpilot is 1.8. That gap usually means
           enterprise buyers are happy but self-serve users aren't."
    GOOD: "Consolidating under 'Chewy Made' while expanding Vet Care to Cedar Park suggests
           you're betting on brand loyalty. Your Trustpilot 3.3 says it's not there yet."
@@ -68,7 +68,7 @@ EMAIL STRUCTURE (follow this exactly):
    This must be a logical inference from the data, not a generic claim.
 
 3. PITCH: In ONE sentence, show how your product solves THAT specific problem.
-   Not "we help companies like yours" — specifically how YOUR tool addresses THEIR issue.
+   Not "we help companies like yours". Specifically how YOUR tool addresses THEIR issue.
 
 4. ASK: Low-friction close. "Worth a 5-min look?" or a question they'd want to answer.
 

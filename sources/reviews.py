@@ -3,8 +3,8 @@ Clarity API - Customer Reviews Source (via SerpAPI)
 
 Fetches customer review data by searching Google for "{company} reviews"
 via SerpAPI. Google's search results contain structured rich snippets
-from G2, Capterra, Gartner Peer Insights, Trustpilot, and TrustRadius
-— all platforms that block direct access.
+from G2, Capterra, Gartner Peer Insights, Trustpilot, and TrustRadius,
+all platforms that block direct access.
 
 This gives us verified ratings, review counts, and sentiment snippets
 from locked-down review platforms without scraping any of them directly.
