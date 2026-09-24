@@ -121,6 +121,9 @@ async def verify_api_key(
 
 # Serve static files
 STATIC_DIR = Path(__file__).parent / "static"
+WELL_KNOWN_DIR = STATIC_DIR / ".well-known"
+if WELL_KNOWN_DIR.exists():
+    app.mount("/.well-known", StaticFiles(directory=str(WELL_KNOWN_DIR)), name="well-known")
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 
