@@ -6,290 +6,304 @@
     <title>Clarity for candidates</title>
     <meta name="description" content="Before you join a startup, see what's true about it. Clarity checks what a company says against its code, hiring, news and pricing.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
         :root {
-            --bg: #06060b;
-            --surface: rgba(255, 255, 255, 0.025);
-            --surface-2: rgba(255, 255, 255, 0.045);
-            --border: rgba(255, 255, 255, 0.07);
-            --border-accent: rgba(99, 102, 241, 0.35);
-            --text: #e4e4eb;
-            --text-secondary: #8f8fa3;
-            --text-muted: #5c5c70;
-            --accent: #6366f1;
-            --accent-soft: #a5b4fc;
-            --accent-glow: rgba(99, 102, 241, 0.12);
-            --green: #4ade80;
-            --green-bg: rgba(34, 197, 94, 0.1);
-            --amber: #fbbf24;
-            --amber-bg: rgba(245, 158, 11, 0.1);
-            --red: #f87171;
-            --red-bg: rgba(239, 68, 68, 0.1);
-            --grey-bg: rgba(255, 255, 255, 0.05);
-            --radius: 14px;
+            --paper: #f6f4ee;
+            --paper-2: #efece3;
+            --ink: #1b1a17;
+            --ink-2: #4b4943;
+            --ink-3: #85837a;
+            --rule: #dcd8cc;
+            --rule-strong: #1b1a17;
+            --accent: #1f5c45;
+            --verified: #1f6b3f;
+            --partly: #94660a;
+            --contradicted: #a33a2b;
+            --unverified: #75736b;
+            --serif: "Newsreader", Georgia, "Times New Roman", serif;
+            --sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+            --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --paper: #151513;
+                --paper-2: #1c1c19;
+                --ink: #ebe9e2;
+                --ink-2: #b7b4ab;
+                --ink-3: #7f7d74;
+                --rule: #2f2e2a;
+                --rule-strong: #ebe9e2;
+                --accent: #84c6a6;
+                --verified: #7fc89c;
+                --partly: #e2b456;
+                --contradicted: #e88b7b;
+                --unverified: #9c9a91;
+            }
         }
 
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { -webkit-text-size-adjust: 100%; }
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            overflow-x: hidden;
+            background: var(--paper);
+            color: var(--ink);
+            font-family: var(--serif);
+            font-size: 18px;
             line-height: 1.55;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
         }
-        a { color: var(--accent-soft); }
+        a { color: inherit; text-decoration-color: var(--rule); text-underline-offset: 3px; }
+        a:hover { text-decoration-color: var(--ink); }
+        ::selection { background: var(--accent); color: var(--paper); }
 
-        .bg-glow {
-            position: fixed; top: -40%; left: 50%; transform: translateX(-50%);
-            width: 800px; max-width: 100vw; height: 600px;
-            background: radial-gradient(ellipse, rgba(99, 102, 241, 0.08) 0%, rgba(99, 102, 241, 0.02) 40%, transparent 70%);
-            pointer-events: none; z-index: 0;
+        .wrap { max-width: 1040px; margin: 0 auto; padding: 0 32px; }
+
+        /* Masthead */
+        .masthead {
+            display: flex; align-items: baseline; justify-content: space-between;
+            padding: 22px 0 18px; border-bottom: 1px solid var(--rule-strong);
+            font-family: var(--sans); font-size: 13px;
         }
+        .wordmark { font-family: var(--serif); font-size: 22px; font-weight: 600; letter-spacing: -0.3px; text-decoration: none; }
+        .wordmark span { font-family: var(--mono); font-size: 12px; font-weight: 400; color: var(--ink-3); margin-left: 8px; letter-spacing: 0; }
+        .masthead nav { display: flex; gap: 20px; }
+        .masthead nav a { text-decoration: none; color: var(--ink-2); }
+        .masthead nav a:hover { color: var(--ink); }
 
-        nav {
-            position: relative; z-index: 10; padding: 18px 40px;
-            display: flex; align-items: center; justify-content: space-between;
-            border-bottom: 1px solid var(--border); background: rgba(6, 6, 11, 0.6); backdrop-filter: blur(12px);
-        }
-        .logo { font-size: 21px; font-weight: 800; color: #fff; letter-spacing: -0.7px; text-decoration: none; }
-        .logo .dot { color: var(--accent); }
-        .nav-links { display: flex; gap: 4px; }
-        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 13px; font-weight: 500; padding: 7px 12px; border-radius: 8px; }
-        .nav-links a:hover { color: #fff; background: var(--surface-2); }
-
-        main { position: relative; z-index: 1; max-width: 860px; margin: 0 auto; padding: 0 24px 80px; }
+        /* Layout: label rail + column */
+        .sec { display: grid; grid-template-columns: 190px minmax(0, 660px); gap: 0 40px; padding: 36px 0; border-bottom: 1px solid var(--rule); }
+        .sec:last-child { border-bottom: none; }
+        .rail { font-family: var(--sans); font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); padding-top: 6px; }
+        .rail small { display: block; font-weight: 400; letter-spacing: 0; text-transform: none; margin-top: 4px; font-size: 12.5px; line-height: 1.45; }
 
         /* Hero */
-        .hero { margin: 64px 0 36px; }
-        .eyebrow { font-size: 12px; font-weight: 600; letter-spacing: 0.5px; color: var(--accent-soft); text-transform: uppercase; margin-bottom: 14px; }
-        .hero h1 { font-size: 46px; font-weight: 800; line-height: 1.08; letter-spacing: -1.3px; color: #fff; max-width: 700px; margin-bottom: 22px; }
-        .hero p { font-size: 16.5px; color: var(--text-secondary); max-width: 640px; margin-bottom: 12px; }
-        .hero p b { color: var(--text); font-weight: 600; }
+        .hero { padding: 64px 0 48px; border-bottom: 1px solid var(--rule); }
+        .hero .kicker { font-family: var(--mono); font-size: 12.5px; color: var(--accent); margin-bottom: 20px; letter-spacing: 0.02em; }
+        .hero h1 { font-weight: 500; font-size: 64px; line-height: 1.02; letter-spacing: -1.6px; max-width: 820px; }
+        .hero h1 em { font-style: italic; color: var(--accent); }
+        .hero .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 34px; max-width: 900px; }
+        .hero p { font-size: 18.5px; color: var(--ink-2); }
+        .hero p b { color: var(--ink); font-weight: 600; }
+        .legend { display: flex; flex-wrap: wrap; gap: 8px 26px; margin-top: 30px; font-family: var(--sans); font-size: 13.5px; color: var(--ink-2); }
+        .legend span b { font-weight: 600; margin-right: 6px; }
 
-        .memo-key { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
-        .memo-key span { font-size: 13px; color: var(--text-secondary); background: var(--surface); border: 1px solid var(--border); border-radius: 100px; padding: 6px 12px; }
-        .memo-key b { color: var(--text); font-weight: 600; margin-right: 4px; }
+        /* Verdict marks */
+        .mark { font-family: var(--sans); font-weight: 600; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; }
+        .mark i { font-style: normal; display: inline-block; width: 1.1em; }
+        .mark.verified { color: var(--verified); }
+        .mark.partly { color: var(--partly); }
+        .mark.contradicted { color: var(--contradicted); }
+        .mark.unverified { color: var(--unverified); }
 
-        .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
-        .section-label { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
-
-        /* Picker */
-        .examples { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 26px; }
-        .chip-btn {
-            font: inherit; font-size: 14px; font-weight: 500; color: var(--text); cursor: pointer;
-            background: var(--surface); border: 1px solid var(--border); border-radius: 100px; padding: 8px 16px;
+        /* Picker + form */
+        .picker { font-family: var(--sans); font-size: 15px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 22px; }
+        .picker button {
+            font: inherit; background: none; border: none; cursor: pointer; color: var(--ink-2); padding: 2px 0;
+            border-bottom: 1.5px solid transparent;
         }
-        .chip-btn:hover { background: var(--surface-2); }
-        .chip-btn[aria-pressed="true"] { border-color: var(--border-accent); background: var(--accent-glow); color: #fff; }
-
-        .input-card { padding: 18px; }
-        .input-card:focus-within { border-color: var(--border-accent); }
-        .field-label { font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px; display: block; }
-        .field-label span { color: var(--text-muted); font-weight: 400; }
-        .row { display: flex; gap: 8px; }
-        input, textarea {
-            width: 100%; min-width: 0; padding: 12px 14px; background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; color: #fff; font: inherit; font-size: 14px; outline: none;
+        .picker button:hover { color: var(--ink); border-bottom-color: var(--rule); }
+        .picker button[aria-pressed="true"] { color: var(--ink); font-weight: 600; border-bottom-color: var(--accent); }
+        .check { margin-top: 26px; font-family: var(--sans); }
+        .check label { display: block; font-size: 13px; color: var(--ink-3); margin-bottom: 6px; }
+        .check .row { display: flex; gap: 12px; align-items: flex-end; }
+        .check input, .check textarea {
+            width: 100%; min-width: 0; font: inherit; font-size: 16px; color: var(--ink); background: transparent;
+            border: none; border-bottom: 1.5px solid var(--ink-3); padding: 8px 0; outline: none; border-radius: 0;
         }
-        input:focus, textarea:focus { border-color: var(--border-accent); }
-        textarea { resize: vertical; min-height: 60px; }
-        .btn { font: inherit; font-size: 14px; font-weight: 600; color: #fff; white-space: nowrap; background: var(--accent); border: none; border-radius: 10px; padding: 12px 20px; cursor: pointer; }
-        .btn:hover { filter: brightness(1.1); }
-        .btn:disabled { opacity: 0.5; cursor: wait; }
-        .hint { font-size: 12px; color: var(--text-muted); margin-top: 10px; }
-        details.more-input summary { font-size: 13px; color: var(--text-secondary); cursor: pointer; margin-top: 12px; }
-        details.more-input textarea { margin-top: 8px; }
-
-        .status { margin: 24px 0 0; font-size: 14px; color: var(--text-secondary); min-height: 20px; }
-        .status.error { color: var(--red); }
+        .check input:focus, .check textarea:focus { border-bottom-color: var(--accent); }
+        .check input::placeholder, .check textarea::placeholder { color: var(--ink-3); }
+        .check textarea { resize: vertical; min-height: 44px; font-size: 15px; }
+        .check button[type="submit"] {
+            font: inherit; font-size: 14px; font-weight: 600; color: var(--paper); background: var(--ink);
+            border: none; padding: 10px 20px; cursor: pointer; border-radius: 2px; white-space: nowrap;
+        }
+        .check button[type="submit"]:hover { background: var(--accent); }
+        .check button:disabled { opacity: 0.5; cursor: wait; }
+        .check details { margin-top: 14px; font-size: 13.5px; color: var(--ink-2); }
+        .check summary { cursor: pointer; }
+        .check details textarea { margin-top: 8px; }
+        .fine { font-family: var(--sans); font-size: 12.5px; color: var(--ink-3); margin-top: 12px; }
+        .status { font-family: var(--mono); font-size: 13px; color: var(--ink-2); margin-top: 18px; min-height: 18px; }
+        .status.error { color: var(--contradicted); }
 
         /* Memo */
-        #result { margin-top: 28px; display: none; }
-        .memo-head { padding: 24px; }
-        .memo-head h2 { font-size: 28px; font-weight: 800; letter-spacing: -0.6px; color: #fff; }
-        .memo-head .domain { color: var(--text-muted); font-size: 14px; margin-left: 8px; font-weight: 500; }
-        .memo-head .what { font-size: 15.5px; margin: 6px 0 14px; color: var(--text); }
-        .facts { display: flex; flex-wrap: wrap; gap: 6px 22px; font-size: 13px; color: var(--text-secondary); }
-        .facts b { color: var(--text); font-weight: 600; }
-        .bottom-line {
-            margin-top: 18px; padding: 14px 16px; border-radius: 10px;
-            background: var(--accent-glow); border: 1px solid var(--border-accent); font-size: 15px; color: #fff;
+        #memo { display: none; }
+        .memo-top { padding: 44px 0 8px; }
+        .memo-top .kicker { font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; color: var(--ink-3); text-transform: uppercase; }
+        .memo-top h2 { font-size: 46px; font-weight: 500; letter-spacing: -1px; line-height: 1.05; margin-top: 8px; }
+        .memo-top .what { font-size: 20px; color: var(--ink-2); margin-top: 10px; max-width: 760px; }
+        .facts { display: grid; grid-template-columns: 110px 1fr; gap: 6px 18px; margin-top: 24px; max-width: 760px; font-size: 15.5px; }
+        .facts dt { font-family: var(--mono); font-size: 12px; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.06em; padding-top: 3px; }
+        .facts dd { color: var(--ink); }
+
+        .bottom-line { font-size: 23px; line-height: 1.42; border-left: 3px solid var(--accent); padding-left: 22px; }
+
+        .claims { list-style: none; }
+        .claims li { display: grid; grid-template-columns: 132px 1fr; gap: 16px; padding: 16px 0; border-top: 1px solid var(--rule); }
+        .claims li:first-child { border-top: none; padding-top: 4px; }
+        .claims .says { font-size: 18px; }
+        .claims .says q { quotes: "\201C" "\201D"; }
+        .claims .ev { font-family: var(--sans); font-size: 14.5px; color: var(--ink-2); margin-top: 4px; line-height: 1.5; }
+
+        .moves { list-style: none; counter-reset: m; }
+        .moves li { position: relative; padding: 0 0 18px 0; }
+        .moves li:last-child { padding-bottom: 0; }
+        .moves .why { font-family: var(--sans); font-size: 14.5px; color: var(--ink-2); margin-top: 3px; }
+
+        sup.fn { font-family: var(--mono); font-size: 10.5px; margin-left: 2px; vertical-align: super; line-height: 0; }
+        sup.fn a { text-decoration: none; color: var(--accent); }
+        sup.fn a:hover { text-decoration: underline; }
+
+        .two { display: grid; grid-template-columns: 1fr 1.35fr; gap: 36px; }
+        .two h4 { font-family: var(--sans); font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 10px; }
+        .gaps { list-style: none; font-family: var(--sans); font-size: 15px; color: var(--ink-2); }
+        .gaps li { padding: 6px 0; border-top: 1px solid var(--rule); }
+        .gaps li:first-child { border-top: none; padding-top: 0; }
+        .asks { padding-left: 22px; }
+        .asks li { padding-left: 4px; margin-bottom: 14px; font-size: 17.5px; }
+        .asks li::marker { font-family: var(--mono); font-size: 13px; color: var(--accent); }
+        .asks .why { display: block; font-family: var(--sans); font-size: 13.5px; color: var(--ink-3); margin-top: 2px; }
+
+        .letter { background: var(--paper-2); border: 1px solid var(--rule); padding: 22px 24px; position: relative; }
+        .letter .note { white-space: pre-wrap; font-size: 17.5px; }
+        .letter button {
+            position: absolute; top: 12px; right: 12px; font-family: var(--sans); font-size: 12.5px; color: var(--ink-2);
+            background: var(--paper); border: 1px solid var(--rule); padding: 4px 10px; cursor: pointer; border-radius: 2px;
         }
-        .bottom-line small { display: block; font-size: 11px; font-weight: 600; color: var(--accent-soft); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+        .letter button:hover { color: var(--ink); border-color: var(--ink-3); }
 
-        .block { margin-top: 30px; }
-        .block h3 { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 4px; }
-        .block .lede { font-size: 13px; color: var(--text-muted); margin-bottom: 12px; }
+        details.more { font-family: var(--sans); font-size: 14.5px; color: var(--ink-2); }
+        details.more summary { cursor: pointer; color: var(--ink); }
+        details.more ul { list-style: none; margin-top: 10px; }
+        details.more li { padding: 3px 0; }
+        details.more .stack { margin-top: 12px; font-family: var(--mono); font-size: 13px; }
 
-        .claims { overflow: hidden; }
-        .claim { display: grid; grid-template-columns: 118px 1fr; gap: 14px; padding: 14px 16px; border-top: 1px solid var(--border); }
-        .claim:first-child { border-top: none; }
-        .pill { display: inline-block; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 100px; white-space: nowrap; height: fit-content; text-align: center; }
-        .pill.verified { color: var(--green); background: var(--green-bg); }
-        .pill.partly { color: var(--amber); background: var(--amber-bg); }
-        .pill.contradicted { color: var(--red); background: var(--red-bg); }
-        .pill.unverified { color: var(--text-secondary); background: var(--grey-bg); }
-        .claim .says { font-size: 14.5px; color: var(--text); }
-        .claim .says::before { content: "They say: "; color: var(--text-muted); }
-        .claim .evidence { font-size: 13.5px; color: var(--text-secondary); margin-top: 4px; }
-        .links { margin-top: 4px; display: flex; flex-wrap: wrap; gap: 4px 14px; }
-        .links a { font-size: 12px; color: var(--accent-soft); text-decoration: none; }
-        .links a:hover { text-decoration: underline; }
+        .sources ol { padding-left: 26px; font-family: var(--mono); font-size: 12.5px; color: var(--ink-2); }
+        .sources li { padding: 2px 0; overflow-wrap: anywhere; word-break: break-all; }
+        .sources li::marker { color: var(--accent); }
+        .coverage { font-family: var(--sans); font-size: 13.5px; color: var(--ink-2); margin-top: 16px; display: flex; flex-wrap: wrap; gap: 2px 14px; }
+        .coverage span { white-space: nowrap; }
+        .coverage .ok { color: var(--ink); }
+        .coverage .no { color: var(--ink-3); text-decoration: line-through; }
+        .coverage .off { color: var(--partly); }
 
-        .moves { display: grid; gap: 8px; }
-        .move { padding: 13px 16px; }
-        .move .main { font-size: 14px; color: var(--text); }
-        .move .sub { font-size: 13px; color: var(--text-secondary); margin-top: 3px; }
+        /* Proposal */
+        .proposal-tag { font-family: var(--mono); font-size: 11.5px; color: var(--partly); border: 1px solid currentColor; padding: 1px 6px; border-radius: 2px; margin-left: 10px; vertical-align: 4px; letter-spacing: 0.04em; }
+        .next h3 { font-size: 30px; font-weight: 500; letter-spacing: -0.5px; line-height: 1.15; }
+        .next > div > p { font-size: 18px; color: var(--ink-2); margin-top: 12px; }
+        .flow { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 12px; align-items: center; margin: 24px 0; font-family: var(--sans); font-size: 14px; }
+        .flow div { border: 1px solid var(--rule); padding: 12px 14px; color: var(--ink-2); background: var(--paper-2); }
+        .flow div b { display: block; font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 4px; }
+        .flow .arrow { font-family: var(--mono); color: var(--ink-3); border: none; background: none; padding: 0; }
+        .next ul { list-style: none; margin-top: 8px; }
+        .next li { padding: 12px 0; border-top: 1px solid var(--rule); font-size: 17px; color: var(--ink-2); }
+        .next li b { color: var(--ink); font-weight: 600; }
+        .next code { font-family: var(--mono); font-size: 13.5px; color: var(--ink); }
 
-        .split { display: grid; grid-template-columns: 1fr 1.4fr; gap: 14px; }
-        .gaps { padding: 16px; }
-        .gaps ul { list-style: none; display: grid; gap: 8px; }
-        .gaps li { font-size: 13.5px; color: var(--text-secondary); padding-left: 16px; position: relative; }
-        .gaps li::before { content: ""; position: absolute; left: 0; top: 8px; width: 7px; height: 7px; border-radius: 50%; border: 1.5px solid var(--amber); }
-        .asks { padding: 16px; }
-        .asks ol { list-style: none; counter-reset: q; display: grid; gap: 12px; }
-        .asks li { counter-increment: q; position: relative; padding-left: 30px; font-size: 14px; color: var(--text); }
-        .asks li::before { content: counter(q); position: absolute; left: 0; top: 0; width: 20px; height: 20px; border-radius: 50%; background: var(--accent-glow); color: var(--accent-soft); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
-        .asks li .why { display: block; font-size: 12.5px; color: var(--text-muted); margin-top: 2px; }
-        .card-title { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 12px; }
+        footer { border-top: 1px solid var(--rule-strong); padding: 22px 0 48px; font-family: var(--sans); font-size: 13px; color: var(--ink-3); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 
-        .note-card { padding: 18px; }
-        .note-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 8px; }
-        .note { white-space: pre-wrap; font-size: 14px; color: var(--text); }
-        .btn-ghost { font: inherit; font-size: 13px; color: var(--text-secondary); cursor: pointer; background: transparent; border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; }
-        .btn-ghost:hover { color: #fff; }
-
-        details.extra { margin-top: 18px; }
-        details.extra summary { cursor: pointer; font-size: 14px; color: var(--text-secondary); padding: 6px 0; }
-        details.extra .inner { padding: 10px 0 0; display: grid; gap: 14px; }
-        .tags { display: flex; flex-wrap: wrap; gap: 6px; }
-        .tag { font-size: 12px; padding: 4px 10px; border-radius: 6px; background: var(--surface-2); color: var(--text-secondary); }
-        .small-list { list-style: none; display: grid; gap: 6px; font-size: 13px; color: var(--text-secondary); }
-
-        .sources { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 26px; font-size: 12px; color: var(--text-muted); }
-        .src { font-size: 12px; padding: 3px 9px; border-radius: 100px; border: 1px solid var(--border); color: var(--text-secondary); }
-        .src.ok { border-color: rgba(34, 197, 94, 0.25); color: #86efac; }
-        .src.miss { color: var(--text-muted); text-decoration: line-through; }
-        .src.off { border-color: rgba(245, 158, 11, 0.25); color: #fcd34d; }
-
-        /* Next on speedrun */
-        .next { margin-top: 72px; }
-        .next h3 { font-size: 22px; font-weight: 800; letter-spacing: -0.4px; color: #fff; margin-bottom: 8px; }
-        .next > p { font-size: 15px; color: var(--text-secondary); max-width: 640px; margin-bottom: 18px; }
-        .proposal { font-size: 11px; font-weight: 600; color: var(--amber); background: var(--amber-bg); border-radius: 100px; padding: 2px 8px; margin-left: 8px; vertical-align: middle; letter-spacing: 0.3px; }
-        .loop { padding: 18px; display: grid; gap: 10px; }
-        .loop-row { display: grid; grid-template-columns: 1fr 24px 1fr; gap: 10px; align-items: center; }
-        .loop-row .gapbox, .loop-row .ansbox { font-size: 13px; padding: 10px 12px; border-radius: 10px; }
-        .loop-row .gapbox { border: 1px dashed rgba(245, 158, 11, 0.35); color: var(--text-secondary); }
-        .loop-row .ansbox { border: 1px solid rgba(34, 197, 94, 0.25); color: var(--text); background: var(--green-bg); }
-        .loop-row .ansbox small, .loop-row .gapbox small { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 2px; }
-        .loop-row .arrow { color: var(--text-muted); text-align: center; }
-        .next ul { list-style: none; display: grid; gap: 10px; margin-top: 18px; }
-        .next li { font-size: 14px; color: var(--text-secondary); padding-left: 16px; position: relative; }
-        .next li::before { content: ""; position: absolute; left: 0; top: 9px; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
-        .next li b { color: var(--text); font-weight: 600; }
-        .next code { font-size: 12px; background: var(--surface-2); padding: 2px 6px; border-radius: 4px; color: var(--text); }
-
-        footer { position: relative; z-index: 1; text-align: center; padding: 32px 16px 48px; font-size: 13px; color: var(--text-muted); border-top: 1px solid var(--border); }
-        footer a { color: var(--text-secondary); }
-
-        @media (max-width: 680px) {
-            nav { padding: 14px 16px; }
-            .nav-links a { padding: 6px 8px; font-size: 12px; }
-            main { padding: 0 16px 64px; }
-            .hero { margin: 40px 0 28px; }
-            .hero h1 { font-size: 33px; letter-spacing: -0.8px; }
-            .row { flex-direction: column; }
-            .memo-head { padding: 18px; }
-            .memo-head h2 { font-size: 24px; }
-            .claim { grid-template-columns: 1fr; gap: 8px; }
-            .claim .pill { justify-self: start; }
-            .split { grid-template-columns: 1fr; }
-            .loop-row { grid-template-columns: 1fr; }
-            .loop-row .arrow { transform: rotate(90deg); }
+        @media (max-width: 860px) {
+            .wrap { padding: 0 16px; }
+            .sec { grid-template-columns: minmax(0, 1fr); padding: 28px 0; }
+            .rail { margin-bottom: 12px; padding-top: 0; }
+            .hero { padding: 40px 0 32px; }
+            .hero h1 { font-size: 40px; letter-spacing: -0.9px; }
+            .hero .cols { grid-template-columns: 1fr; gap: 12px; margin-top: 22px; }
+            .memo-top h2 { font-size: 34px; }
+            .bottom-line { font-size: 20px; padding-left: 16px; }
+            .claims li { grid-template-columns: 1fr; gap: 4px; }
+            .two { grid-template-columns: 1fr; gap: 26px; }
+            .flow { grid-template-columns: 1fr; }
+            .flow .arrow { transform: rotate(90deg); justify-self: center; }
+            .facts { grid-template-columns: 88px 1fr; }
+            .check .row { flex-direction: column; align-items: stretch; }
         }
     </style>
 </head>
 <body>
-    <div class="bg-glow"></div>
+    <div class="wrap">
+        <header class="masthead">
+            <a class="wordmark" href="/speedrun">Clarity<span>for candidates</span></a>
+            <nav>
+                <a href="/docs#/default/analyze_for_candidate_api_candidate_post" target="_blank" rel="noopener">API</a>
+                <a href="https://github.com/deepgori/clarity" target="_blank" rel="noopener">GitHub</a>
+            </nav>
+        </header>
 
-    <nav>
-        <a class="logo" href="/speedrun">clarity<span class="dot">.</span></a>
-        <div class="nav-links">
-            <a href="/docs#/default/analyze_for_candidate_api_candidate_post" target="_blank" rel="noopener">API</a>
-            <a href="https://github.com/deepgori/clarity" target="_blank" rel="noopener">GitHub</a>
-        </div>
-    </nav>
-
-    <main>
         <section class="hero">
-            <div class="eyebrow">Clarity for candidates</div>
-            <h1>Before you join a startup, see what's true about it.</h1>
-            <p>When a VC invests in a startup, they spend weeks checking it out. When you join one, you bet years of your career on it and take part of your pay in equity, usually after a single call with the founder and a look at the website.</p>
-            <p>Clarity checks what a company says about itself against its code, hiring, news and pricing. You get a short memo: <b>what holds up, what's moving, what nobody has said publicly, and what to ask</b>. Each claim and signal links to its source.</p>
-            <div class="memo-key">
-                <span><b class="pill verified">Verified</b> backed by outside evidence</span>
-                <span><b class="pill partly">Partly</b> narrower than claimed</span>
-                <span><b class="pill unverified">Can't verify</b> ask the founder</span>
+            <div class="kicker">Due diligence, for the person joining</div>
+            <h1>Before you join a startup, see <em>what's true</em> about it.</h1>
+            <div class="cols">
+                <p>When a VC invests in a startup, they spend weeks checking it out. When you join one, you bet years of your career on it and take part of your pay in equity, usually after one call with the founder and a look at the website.</p>
+                <p>Clarity checks what a company says about itself against its code, hiring, news and pricing, then writes a short memo: <b>what holds up, what's moving, what nobody has said publicly, and what to ask.</b> Claims and signals are footnoted to their sources.</p>
+            </div>
+            <div class="legend">
+                <span class="mark verified"><b><i>&#10003;</i>Verified</b></span>
+                <span class="mark partly"><b><i>&#9680;</i>Partly</b></span>
+                <span class="mark contradicted"><b><i>&#10005;</i>Contradicted</b></span>
+                <span class="mark unverified"><b><i>?</i>Can't verify</b></span>
             </div>
         </section>
 
-        <section id="examples-section" style="display:none;">
-            <div class="section-label">Speedrun SR007 companies, already checked</div>
-            <div class="examples" id="examples"></div>
-        </section>
-
-        <section>
-            <div class="section-label">Check any startup</div>
-            <form class="card input-card" id="form" autocomplete="off">
-                <label class="field-label" for="domain">Company website</label>
-                <div class="row">
-                    <input id="domain" name="domain" type="text" placeholder="e.g. linear.app" required maxlength="100">
-                    <button class="btn" id="go" type="submit">Check it</button>
-                </div>
-                <details class="more-input">
-                    <summary>Add a line about you for a tailored note to the founder (optional)</summary>
-                    <textarea id="profile" name="profile" maxlength="1500" placeholder="What you build, and/or your GitHub URL"></textarea>
-                </details>
-                <div class="hint">Takes about 20 seconds. Results are cached for a few hours.</div>
-            </form>
-        </section>
-
-        <div class="status" id="status" role="status" aria-live="polite"></div>
-
-        <section id="result"></section>
-
-        <section class="next">
-            <h3>Where this goes on speedrun <span class="proposal">PROPOSAL</span></h3>
-            <p>The public web can't answer some of what candidates most need to know, like runway, team size and pay. Speedrun works with these founders directly, so the memo could close its own gaps.</p>
-            <div class="card loop">
-                <div class="loop-row">
-                    <div class="gapbox"><small>Memo says</small>Couldn't find: funding and runway</div>
-                    <div class="arrow">&rarr;</div>
-                    <div class="ansbox"><small>Founder answers once, shown as founder-provided</small>Every later candidate sees it</div>
-                </div>
+        <section class="sec">
+            <div class="rail">Read a memo<small>Speedrun SR007 companies, checked in advance.</small></div>
+            <div>
+                <div class="picker" id="examples"><span style="color:var(--ink-3)">Loading examples&hellip;</span></div>
+                <form class="check" id="form" autocomplete="off">
+                    <label for="domain">Or check any startup</label>
+                    <div class="row">
+                        <input id="domain" name="domain" type="text" placeholder="company website, e.g. linear.app" required maxlength="100">
+                        <button type="submit" id="go">Check it</button>
+                    </div>
+                    <details>
+                        <summary>Add a line about you for a tailored note to the founder</summary>
+                        <textarea id="profile" name="profile" maxlength="1500" placeholder="What you build, and/or your GitHub URL"></textarea>
+                    </details>
+                    <div class="fine">Takes about 20 seconds. Results are cached for a few hours.</div>
+                </form>
+                <div class="status" id="status" role="status" aria-live="polite"></div>
             </div>
-            <ul>
-                <li><b>Founders fill the gaps.</b> Each memo ends with what's still unanswered. A founder answers once and every candidate after sees it. Founders who are open about it get better-informed applicants.</li>
-                <li><b>One link on every jobs board listing.</b> "Check this company" opens the memo for that company.</li>
-                <li><b>A tool on the speedrun MCP server.</b> A job seeker's own agent can call it before drafting an application. It's already one API call: <code>POST /api/candidate</code> with a domain.</li>
-            </ul>
         </section>
-    </main>
 
-    <footer>
-        Built by <a href="https://github.com/deepgori" target="_blank" rel="noopener">Deep Gori</a>. Runs on Clarity, a company-research engine I built.
-    </footer>
+        <article id="memo"></article>
+
+        <section class="sec next">
+            <div class="rail">Next</div>
+            <div>
+                <h3>Where this goes on speedrun<span class="proposal-tag">PROPOSAL</span></h3>
+                <p>Some of what candidates most need to know never shows up on the public web: runway, team size, pay. Speedrun works with these founders directly, so the memo can close its own gaps.</p>
+                <div class="flow">
+                    <div><b>Memo</b>Not public: funding and runway</div>
+                    <span class="arrow">&rarr;</span>
+                    <div><b>Founder</b>Answers once</div>
+                    <span class="arrow">&rarr;</span>
+                    <div><b>Every later candidate</b>Sees it, marked founder-provided</div>
+                </div>
+                <ul>
+                    <li><b>Founders fill the gaps.</b> Founders who are open about runway and pay get better-informed applicants, and candidates stop guessing.</li>
+                    <li><b>A link on every jobs board listing.</b> "Check this company" opens the memo for that company.</li>
+                    <li><b>A tool on the speedrun MCP server.</b> A job seeker's own agent can call it before drafting an application. It is already one call: <code>POST /api/candidate</code> with a domain.</li>
+                </ul>
+            </div>
+        </section>
+
+        <footer>
+            <span>Built by <a href="https://github.com/deepgori" target="_blank" rel="noopener">Deep Gori</a>. Runs on Clarity, a company-research engine I built.</span>
+            <span>Every memo is generated from public sources and may be incomplete.</span>
+        </footer>
+    </div>
 
     <script>
     (function () {
         var SOURCE_LABELS = { website: "Website", news: "News", github: "GitHub", jobs: "Job boards", community: "Hacker News", reviews: "Reviews" };
-        var VERDICT_LABELS = { verified: "Verified", partly: "Partly", contradicted: "Contradicted", unverified: "Can't verify" };
-        var VERDICT_ORDER = { contradicted: 0, partly: 1, verified: 2, unverified: 3 };
-        var resultEl = document.getElementById("result");
+        var VERDICTS = {
+            verified: ["✓", "Verified"], partly: ["◐", "Partly"],
+            contradicted: ["✕", "Contradicted"], unverified: ["?", "Can't verify"]
+        };
+        var ORDER = { contradicted: 0, partly: 1, verified: 2, unverified: 3 };
+        var memoEl = document.getElementById("memo");
         var statusEl = document.getElementById("status");
 
         function el(tag, attrs, children) {
@@ -299,218 +313,194 @@
                 else if (k === "class") n.className = attrs[k];
                 else n.setAttribute(k, attrs[k]);
             });
-            (children || []).forEach(function (c) { if (c) n.appendChild(typeof c === "string" ? document.createTextNode(c) : c); });
+            (children || []).forEach(function (c) {
+                if (c === null || c === undefined || c === "") return;
+                n.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+            });
             return n;
         }
-
-        function host(url) {
-            try { return new URL(url).hostname.replace(/^www\./, ""); } catch (e) { return "source"; }
+        function setStatus(msg, isError) { statusEl.textContent = msg || ""; statusEl.className = "status" + (isError ? " error" : ""); }
+        function evidenceWord(c) { return c >= 0.75 ? "Strong" : c >= 0.5 ? "Moderate" : "Thin"; }
+        function mark(v) {
+            var m = VERDICTS[v] || ["", v];
+            return el("span", { class: "mark " + v }, [el("i", { text: m[0] }), m[1]]);
         }
-
-        function link(url, label) {
-            if (!url || !/^https?:\/\//i.test(url)) return null;
-            return el("a", { href: url, target: "_blank", rel: "noopener nofollow", text: label || host(url) + " ↗" });
-        }
-
-        function links(pairs) {
-            var items = pairs.map(function (p) { return link(p[0], p[1]); }).filter(Boolean);
-            return items.length ? el("div", { class: "links" }, items) : null;
-        }
-
-        function block(title, lede, body) {
-            return el("div", { class: "block" }, [el("h3", { text: title }), lede ? el("p", { class: "lede", text: lede }) : null, body]);
-        }
-
-        function setStatus(msg, isError) {
-            statusEl.textContent = msg || "";
-            statusEl.className = "status" + (isError ? " error" : "");
-        }
-
-        function evidenceLabel(c) {
-            if (c >= 0.75) return "Strong";
-            if (c >= 0.5) return "Moderate";
-            return "Thin";
+        function sec(label, sub, body) {
+            return el("section", { class: "sec" }, [el("div", { class: "rail" }, [label, sub ? el("small", { text: sub }) : null]), el("div", {}, [body])]);
         }
 
         function render(data) {
-            resultEl.textContent = "";
+            memoEl.textContent = "";
             var intel = data.intelligence;
             if (!data.success || !intel) {
                 setStatus(data.error || "Something went wrong. Try again in a minute.", true);
-                resultEl.style.display = "none";
+                memoEl.style.display = "none";
                 return;
             }
             setStatus("");
 
-            // Head: who they are + bottom line
-            var title = el("h2", {}, [intel.company_name, el("span", { class: "domain", text: intel.domain })]);
-            var facts = el("div", { class: "facts" });
-            [["Sells to", intel.who_they_sell_to], ["Stage", intel.stage], ["Evidence", evidenceLabel(intel.overall_confidence || 0)]].forEach(function (f) {
-                facts.appendChild(el("span", {}, [el("b", { text: f[0] + ": " }), f[1] || "Not found"]));
-            });
-            var head = el("div", { class: "card memo-head" }, [title, el("p", { class: "what", text: intel.what_they_do }), facts]);
-            if (intel.bottom_line) head.appendChild(el("div", { class: "bottom-line" }, [el("small", { text: "Bottom line" }), intel.bottom_line]));
-            resultEl.appendChild(head);
+            // Footnotes: one number per distinct source URL, in reading order
+            var cites = [];
+            function fn(url) {
+                if (!url || !/^https?:\/\//i.test(url)) return null;
+                var i = cites.indexOf(url);
+                if (i === -1) { cites.push(url); i = cites.length - 1; }
+                return el("sup", { class: "fn" }, [el("a", { href: "#src-" + (i + 1), title: url, text: String(i + 1) })]);
+            }
 
-            // Claims vs evidence
-            var claims = (intel.claims_checked || []).slice().sort(function (a, b) {
-                return (VERDICT_ORDER[a.verdict] || 9) - (VERDICT_ORDER[b.verdict] || 9);
+            // Header
+            var checked = data.sources_checked || {};
+            var unrelated = intel.unrelated_sources || [];
+            var usable = Object.keys(SOURCE_LABELS).filter(function (k) { return checked[k] && unrelated.indexOf(k) === -1; }).length;
+            var facts = el("dl", { class: "facts" });
+            [["Sells to", intel.who_they_sell_to], ["Stage", intel.stage],
+             ["Evidence", evidenceWord(intel.overall_confidence || 0) + ", " + usable + " of 6 sources usable"],
+             ["As of", (intel.data_freshness || "").replace(/^Data is current as of /, "")]].forEach(function (f) {
+                facts.appendChild(el("dt", { text: f[0] })); facts.appendChild(el("dd", { text: f[1] || "Not found" }));
             });
+            memoEl.appendChild(el("div", { class: "memo-top" }, [
+                el("div", { class: "kicker", text: "Candidate memo · " + intel.domain }),
+                el("h2", { text: intel.company_name }),
+                el("p", { class: "what", text: intel.what_they_do }),
+                facts
+            ]));
+
+            if (intel.bottom_line) memoEl.appendChild(sec("Bottom line", null, el("p", { class: "bottom-line", text: intel.bottom_line })));
+
+            // Claims
+            var claims = (intel.claims_checked || []).slice().sort(function (a, b) { return (ORDER[a.verdict] || 9) - (ORDER[b.verdict] || 9); });
             var tensions = intel.contradictions || [];
             if (claims.length || tensions.length) {
-                var box = el("div", { class: "card claims" });
+                var ul = el("ul", { class: "claims" });
                 claims.forEach(function (c) {
-                    box.appendChild(el("div", { class: "claim" }, [
-                        el("span", { class: "pill " + c.verdict, text: VERDICT_LABELS[c.verdict] || c.verdict }),
+                    ul.appendChild(el("li", {}, [
+                        mark(c.verdict),
                         el("div", {}, [
-                            el("div", { class: "says", text: c.claim }),
-                            el("div", { class: "evidence", text: c.evidence }),
-                            links([[c.claim_url, "where they say it ↗"], [c.evidence_url, "evidence: " + host(c.evidence_url) + " ↗"]])
+                            el("div", { class: "says" }, [el("q", { text: c.claim }), fn(c.claim_url)]),
+                            el("div", { class: "ev" }, [c.evidence, fn(c.evidence_url)])
                         ])
                     ]));
                 });
                 tensions.forEach(function (t) {
-                    box.appendChild(el("div", { class: "claim" }, [
-                        el("span", { class: "pill partly", text: "Sources differ" }),
-                        el("div", {}, [
-                            el("div", { class: "evidence", style: "margin-top:0", text: t.claim_a + " / " + t.claim_b }),
-                            el("div", { class: "evidence", text: "Likely: " + t.resolution })
-                        ])
+                    ul.appendChild(el("li", {}, [
+                        mark("partly"),
+                        el("div", {}, [el("div", { class: "says", text: t.claim_a + " / " + t.claim_b }), el("div", { class: "ev", text: "Likely: " + t.resolution })])
                     ]));
                 });
-                resultEl.appendChild(block("What they say vs. what's true", "Their own claims, checked against independent sources.", box));
+                memoEl.appendChild(sec("What they say vs. what's true", "Their own claims, checked against independent sources.", ul));
             }
 
-            // What's moving
+            // Signals
             var signals = intel.signals || [];
             if (signals.length) {
-                var moves = el("div", { class: "moves" });
+                var ol = el("ul", { class: "moves" });
                 signals.forEach(function (s) {
-                    moves.appendChild(el("div", { class: "card move" }, [
-                        el("div", { class: "main", text: s.signal }),
-                        el("div", { class: "sub", text: s.why_it_matters }),
-                        links([[s.source_url]])
-                    ]));
+                    ol.appendChild(el("li", {}, [el("div", {}, [s.signal, fn(s.source_url)]), el("div", { class: "why", text: s.why_it_matters })]));
                 });
-                resultEl.appendChild(block("What's moving", "Recent changes, and what they mean if you join.", moves));
+                memoEl.appendChild(sec("What's moving", "Recent changes, and what they mean if you join.", ol));
             }
 
-            // Gaps + questions side by side
+            // Gaps + questions
             var gaps = intel.evidence_gaps || [];
             var qs = (intel.questions_for_founder || []).map(function (q) { return { q: q.question, why: q.based_on }; });
             tensions.forEach(function (t) { if (t.question_to_ask) qs.push({ q: t.question_to_ask, why: "" }); });
             if (gaps.length || qs.length) {
-                var split = el("div", { class: "split" });
+                var two = el("div", { class: "two" });
                 if (gaps.length) {
-                    var ul = el("ul");
-                    gaps.forEach(function (g) { ul.appendChild(el("li", { text: g })); });
-                    split.appendChild(el("div", { class: "card gaps" }, [el("div", { class: "card-title", text: "Nobody has said publicly" }), ul]));
+                    var g = el("ul", { class: "gaps" });
+                    gaps.forEach(function (x) { g.appendChild(el("li", { text: x })); });
+                    two.appendChild(el("div", {}, [el("h4", { text: "Not public" }), g]));
                 }
                 if (qs.length) {
-                    var ol = el("ol");
-                    qs.forEach(function (q) {
-                        ol.appendChild(el("li", {}, [q.q, q.why ? el("span", { class: "why", text: "Because: " + q.why }) : null]));
-                    });
-                    split.appendChild(el("div", { class: "card asks" }, [el("div", { class: "card-title", text: "So ask the founder" }), ol]));
+                    var a = el("ol", { class: "asks" });
+                    qs.forEach(function (q) { a.appendChild(el("li", {}, [q.q, q.why ? el("span", { class: "why", text: "Because: " + q.why }) : null])); });
+                    two.appendChild(el("div", {}, [el("h4", { text: "So ask the founder" }), a]));
                 }
-                resultEl.appendChild(block("Before the call", null, split));
+                memoEl.appendChild(sec("Before the call", null, two));
             }
 
-            // Intro note
+            // Note
             if (data.intro_note) {
-                var copyBtn = el("button", { class: "btn-ghost", type: "button", text: "Copy" });
-                copyBtn.addEventListener("click", function () {
+                var copy = el("button", { type: "button", text: "Copy" });
+                copy.addEventListener("click", function () {
                     try {
                         navigator.clipboard.writeText(data.intro_note).then(function () {
-                            copyBtn.textContent = "Copied";
-                            setTimeout(function () { copyBtn.textContent = "Copy"; }, 1500);
+                            copy.textContent = "Copied"; setTimeout(function () { copy.textContent = "Copy"; }, 1500);
                         });
                     } catch (e) { /* clipboard blocked; text stays selectable */ }
                 });
-                resultEl.appendChild(el("div", { class: "block" }, [el("div", { class: "card note-card" }, [
-                    el("div", { class: "note-head" }, [el("div", { class: "card-title", style: "margin:0", text: "Draft note to the founder" }), copyBtn]),
-                    el("div", { class: "note", text: data.intro_note })
-                ])]));
+                memoEl.appendChild(sec("Draft note", "To the founder. Edit before sending.", el("div", { class: "letter" }, [copy, el("div", { class: "note", text: data.intro_note })])));
             }
 
-            // Hiring + stack, folded away
-            var hiring = intel.hiring_signals || [];
-            var stack = intel.tech_stack || [];
+            // Hiring + stack
+            var hiring = intel.hiring_signals || [], stack = intel.tech_stack || [];
             if (hiring.length || stack.length) {
-                var inner = el("div", { class: "inner" });
-                if (hiring.length) {
-                    var hl = el("ul", { class: "small-list" });
-                    hiring.forEach(function (h) { hl.appendChild(el("li", { text: h })); });
-                    inner.appendChild(el("div", {}, [el("div", { class: "card-title", text: "Hiring" }), hl]));
-                }
-                if (stack.length) {
-                    var tags = el("div", { class: "tags" });
-                    stack.forEach(function (t) { tags.appendChild(el("span", { class: "tag", text: t })); });
-                    inner.appendChild(el("div", {}, [el("div", { class: "card-title", text: "Tech seen" }), tags]));
-                }
-                resultEl.appendChild(el("details", { class: "extra" }, [el("summary", { text: "Hiring details and tech stack" }), inner]));
+                var hl = el("ul");
+                hiring.forEach(function (h) { hl.appendChild(el("li", { text: h })); });
+                memoEl.appendChild(sec("Details", null, el("details", { class: "more" }, [
+                    el("summary", { text: "Hiring and tech stack" }), hiring.length ? hl : null,
+                    stack.length ? el("div", { class: "stack", text: stack.join(" · ") }) : null
+                ])));
             }
 
-            // Sources checked
-            var unrelated = intel.unrelated_sources || [];
-            var src = el("div", { class: "sources" }, ["Checked:"]);
+            // Sources
+            var srcList = el("ol");
+            cites.forEach(function (u, i) {
+                var shown = u.replace(/^https?:\/\/(www\.)?/, "");
+                if (shown.length > 72) shown = shown.slice(0, 70) + "…";
+                srcList.appendChild(el("li", { id: "src-" + (i + 1) }, [el("a", { href: u, target: "_blank", rel: "noopener nofollow", text: shown })]));
+            });
+            var cov = el("div", { class: "coverage" }, ["Checked: "]);
             Object.keys(SOURCE_LABELS).forEach(function (k) {
-                var ok = data.sources_checked && data.sources_checked[k];
-                var off = ok && unrelated.indexOf(k) !== -1;
-                src.appendChild(el("span", {
-                    class: "src " + (off ? "off" : ok ? "ok" : "miss"),
-                    title: off ? "Results were about something else with the same name, ignored" : ok ? "Returned data" : "Checked, nothing found",
+                var ok = checked[k], off = ok && unrelated.indexOf(k) !== -1;
+                cov.appendChild(el("span", {
+                    class: off ? "off" : ok ? "ok" : "no",
+                    title: off ? "Results were about a different company with the same name, so they were ignored" : ok ? "Returned data" : "Checked, nothing found",
                     text: SOURCE_LABELS[k] + (off ? " (other company)" : "")
                 }));
             });
-            src.appendChild(el("span", { text: "· " + (intel.data_freshness || "") }));
-            resultEl.appendChild(src);
+            memoEl.appendChild(el("section", { class: "sec sources" }, [el("div", { class: "rail", text: "Sources" }), el("div", {}, [cites.length ? srcList : null, cov])]));
 
-            resultEl.style.display = "block";
+            memoEl.style.display = "block";
         }
 
-        // Pre-run examples: static JSON, so they load instantly and cost nothing per view
-        var examplesEl = document.getElementById("examples");
-        function selectExample(btn, file) {
-            Array.prototype.forEach.call(examplesEl.children, function (b) { b.setAttribute("aria-pressed", "false"); });
+        // Pre-run examples
+        var picker = document.getElementById("examples");
+        function select(btn, file) {
+            Array.prototype.forEach.call(picker.querySelectorAll("button"), function (b) { b.setAttribute("aria-pressed", "false"); });
             btn.setAttribute("aria-pressed", "true");
             fetch("/static/speedrun/examples/" + encodeURIComponent(file))
-                .then(function (r) { return r.json(); })
-                .then(render)
+                .then(function (r) { return r.json(); }).then(render)
                 .catch(function () { setStatus("Could not load that example.", true); });
         }
         fetch("/static/speedrun/examples/index.json")
             .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
             .then(function (list) {
-                if (!list || !list.length) return;
-                list.forEach(function (ex, i) {
-                    var b = el("button", { class: "chip-btn", type: "button", "aria-pressed": "false", text: ex.company_name });
-                    b.addEventListener("click", function () { selectExample(b, ex.file); });
-                    examplesEl.appendChild(b);
-                    if (i === 0) selectExample(b, ex.file);
+                picker.textContent = "";
+                (list || []).forEach(function (ex, i) {
+                    var name = ex.company_name.charAt(0).toUpperCase() + ex.company_name.slice(1);
+                    var b = el("button", { type: "button", "aria-pressed": "false", text: name });
+                    b.addEventListener("click", function () { select(b, ex.file); });
+                    picker.appendChild(b);
+                    if (i === 0) select(b, ex.file);
                 });
-                document.getElementById("examples-section").style.display = "block";
             })
-            .catch(function () { /* no examples published yet */ });
+            .catch(function () { picker.textContent = ""; });
 
-        // Live run
-        var form = document.getElementById("form");
-        var go = document.getElementById("go");
+        // Live check
+        var form = document.getElementById("form"), go = document.getElementById("go");
         form.addEventListener("submit", function (e) {
             e.preventDefault();
             var domain = document.getElementById("domain").value.trim();
             var profile = document.getElementById("profile").value.trim();
             if (!domain) return;
-            Array.prototype.forEach.call(examplesEl.children, function (b) { b.setAttribute("aria-pressed", "false"); });
-            go.disabled = true;
-            resultEl.style.display = "none";
-            var started = Date.now();
-            var msg = "Checking the site, news, GitHub, job boards, Hacker News and reviews...";
-            setStatus(msg);
-            var timer = setInterval(function () { setStatus(msg + " " + Math.round((Date.now() - started) / 1000) + "s"); }, 1000);
+            Array.prototype.forEach.call(picker.querySelectorAll("button"), function (b) { b.setAttribute("aria-pressed", "false"); });
+            go.disabled = true; memoEl.style.display = "none";
+            var started = Date.now(), msg = "Reading the site, news, GitHub, job boards, Hacker News and reviews";
+            setStatus(msg + "...");
+            var timer = setInterval(function () { setStatus(msg + "... " + Math.round((Date.now() - started) / 1000) + "s"); }, 1000);
             fetch("/api/candidate", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
+                method: "POST", headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ domain: domain, candidate_profile: profile || null })
             })
                 .then(function (r) {
@@ -518,7 +508,7 @@
                     if (r.status === 422) return { success: false, error: "That doesn't look like a company website." };
                     return r.json();
                 })
-                .then(render)
+                .then(function (d) { render(d); if (d && d.success) memoEl.scrollIntoView({ behavior: "smooth", block: "start" }); })
                 .catch(function () { setStatus("Could not reach the server. Try again.", true); })
                 .then(function () { clearInterval(timer); go.disabled = false; });
         });
