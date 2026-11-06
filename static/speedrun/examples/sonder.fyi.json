@@ -1,0 +1,142 @@
+{
+  "success": true,
+  "intelligence": {
+    "company_name": "Sonder",
+    "domain": "sonder.fyi",
+    "what_they_do": "Sonder is building AI software that observes a user's screen to learn their workflows and turn them into reusable skills and knowledge.",
+    "who_they_sell_to": "Individuals first, then teams and companies, according to the homepage.",
+    "industry": "AI productivity software",
+    "stage": "Not stated",
+    "bottom_line": "Sonder has a current site and 4 New York technical roles that line up with its stated focus on local vision models, RL, and product engineering. Funding, team size, customer traction, and product maturity are not public, so ask those first.",
+    "claims_checked": [
+      {
+        "claim": "Sonder is post-training vision models that live on your machine and watch your screen.",
+        "claim_url": "https://www.sonder.fyi/",
+        "verdict": "partly",
+        "evidence": "The Local Inference & Kernels and Data and RL roles support work on local inference and model training, but no independent source confirms the models already live on users' machines or watch screens in production.",
+        "evidence_url": "https://www.sonder.fyi/careers"
+      },
+      {
+        "claim": "The immediate product helps individuals turn their work and sensibilities into reusable skills and knowledge with zero friction.",
+        "claim_url": "https://www.sonder.fyi/",
+        "verdict": "unverified",
+        "evidence": "A public demo, customer evidence, product documentation, or user reviews for sonder.fyi would settle whether this product exists and works as described.",
+        "evidence_url": ""
+      },
+      {
+        "claim": "Over time, those skills become shared team knowledge and a shared intelligence layer for the organization.",
+        "claim_url": "https://www.sonder.fyi/",
+        "verdict": "unverified",
+        "evidence": "Customer deployments, case studies, or product documentation showing individual skills becoming team or company-level shared knowledge would settle this.",
+        "evidence_url": ""
+      },
+      {
+        "claim": "Sonder has 4 open roles: Member of Technical Staff in Local Inference & Kernels, Data and RL, Design, and Product Engineer.",
+        "claim_url": "https://www.sonder.fyi/careers",
+        "verdict": "verified",
+        "evidence": "The Ashby job board also lists 4 open Technical Staff positions in New York City with the same role titles.",
+        "evidence_url": "https://jobs.ashbyhq.com/sonder"
+      }
+    ],
+    "signals": [
+      {
+        "signal": "The careers page lists 4 open roles, all Member of Technical Staff roles in New York: Local Inference & Kernels, Data and RL, Design, and Product Engineer.",
+        "why_it_matters": "This points to a small technical team building core model, inference, data, and product surfaces rather than scaling go-to-market yet.",
+        "source_url": "https://www.sonder.fyi/careers",
+        "confidence": 0.95
+      },
+      {
+        "signal": "Ashby also shows 4 open Technical Staff positions in New York City, with all roles categorized as senior and on-site or in-office.",
+        "why_it_matters": "A candidate should expect senior IC expectations and in-person collaboration in New York City.",
+        "source_url": "https://jobs.ashbyhq.com/sonder",
+        "confidence": 0.9
+      },
+      {
+        "signal": "The homepage, published on 2026-11-05, says Sonder is post-training vision models that live on your machine and watch your screen to learn patterns, preferences, and workflows.",
+        "why_it_matters": "The current product direction appears centered on local vision-model behavior learning, which matches the listed Local Inference & Kernels and Data and RL roles.",
+        "source_url": "https://www.sonder.fyi/",
+        "confidence": 0.85
+      },
+      {
+        "signal": "The public site has only a homepage and careers page in the fetched pages; /about, /pricing, /products, /blog, and /engineering all return 404.",
+        "why_it_matters": "There is little public product, customer, pricing, or company-detail material, so a candidate will need to get most operating context directly from the founder.",
+        "source_url": "https://www.sonder.fyi/about",
+        "confidence": 0.9
+      }
+    ],
+    "contradictions": [],
+    "questions_for_founder": [
+      {
+        "question": "The site says the first product helps individuals create reusable skills and knowledge, while all 4 open roles are technical staff in New York City. What is the first concrete user workflow you are trying to make work end to end?",
+        "based_on": "Homepage describes an individual product, and careers lists 4 New York technical roles.",
+        "source_url": "https://www.sonder.fyi/"
+      },
+      {
+        "question": "For the Member of Technical Staff, Local Inference & Kernels role, what has to run locally today: screen capture, vision inference, post-training, or all of it?",
+        "based_on": "Careers lists a Local Inference & Kernels role, and the homepage says models live on the user's machine and watch the screen.",
+        "source_url": "https://www.sonder.fyi/careers"
+      },
+      {
+        "question": "For the Member of Technical Staff, Data and RL role, what feedback signal are you using to tell whether a learned workflow or preference is correct?",
+        "based_on": "Careers lists a Data and RL role, and the homepage says knowledge work correctness depends on company-specific context.",
+        "source_url": "https://www.sonder.fyi/careers"
+      },
+      {
+        "question": "What is the current funding, runway, and team size? I could not find a stated round, amount raised, or headcount in the public sources.",
+        "based_on": "Stage is not stated on the website or careers data.",
+        "source_url": "https://www.sonder.fyi/"
+      },
+      {
+        "question": "The site says the product has zero friction, but there is no public demo, pricing page, or product page in the fetched site. What is already in users' hands versus still research prototype?",
+        "based_on": "Homepage claims zero friction, while /pricing and /products return 404.",
+        "source_url": "https://www.sonder.fyi/products"
+      }
+    ],
+    "evidence_gaps": [
+      "News results were about something else with the same name, so they were ignored",
+      "Hacker News results were about something else with the same name, so they were ignored",
+      "Review results were about something else with the same name, so they were ignored",
+      "Funding and runway",
+      "Team size",
+      "Founder backgrounds",
+      "Customer traction",
+      "Compensation for the 4 open roles",
+      "Current product maturity and launch status",
+      "Security and privacy model for screen observation"
+    ],
+    "unrelated_sources": [
+      "news",
+      "community",
+      "reviews"
+    ],
+    "tech_stack": [
+      "Cloudflare",
+      "Vercel"
+    ],
+    "hiring_signals": [
+      "4 open roles on the company careers page, all Member of Technical Staff roles in New York.",
+      "Ashby lists 4 open Technical Staff positions in New York City.",
+      "Open roles are Local Inference & Kernels, Data and RL, Design, and Product Engineer.",
+      "Ashby categorizes all 4 roles as senior and on-site or in-office."
+    ],
+    "sources_used": [
+      "https://www.sonder.fyi/",
+      "https://www.sonder.fyi/careers",
+      "Ashby job board",
+      "HTTP header detected tech stack"
+    ],
+    "overall_confidence": 0.6,
+    "data_freshness": "Data is current as of 2026-11-06"
+  },
+  "intro_note": "4 open Technical Staff roles in New York, all senior and on-site or in-office, makes Sonder look like it is still in the core build phase. The 2026-11-05 homepage says the product watches a user’s screen locally to learn workflows, preferences, and reusable skills.\n\n[one line on what you have built]\n\nFor Local Inference & Kernels, what has to run locally today: screen capture, vision inference, post-training, or all of it? Happy to do a 20-minute call if useful.",
+  "sources_checked": {
+    "website": true,
+    "news": true,
+    "github": true,
+    "jobs": true,
+    "community": true,
+    "reviews": true
+  },
+  "error": null,
+  "processing_time_ms": 26948
+}

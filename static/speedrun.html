@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clarity for candidates</title>
+    <meta name="description" content="Before you join a startup, see what's true about it. Clarity checks what a company says against its code, hiring, news and pricing.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #06060b;
+            --surface: rgba(255, 255, 255, 0.025);
+            --surface-2: rgba(255, 255, 255, 0.045);
+            --border: rgba(255, 255, 255, 0.07);
+            --border-accent: rgba(99, 102, 241, 0.35);
+            --text: #e4e4eb;
+            --text-secondary: #8f8fa3;
+            --text-muted: #5c5c70;
+            --accent: #6366f1;
+            --accent-soft: #a5b4fc;
+            --accent-glow: rgba(99, 102, 241, 0.12);
+            --green: #4ade80;
+            --green-bg: rgba(34, 197, 94, 0.1);
+            --amber: #fbbf24;
+            --amber-bg: rgba(245, 158, 11, 0.1);
+            --red: #f87171;
+            --red-bg: rgba(239, 68, 68, 0.1);
+            --grey-bg: rgba(255, 255, 255, 0.05);
+            --radius: 14px;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            line-height: 1.55;
+        }
+        a { color: var(--accent-soft); }
+
+        .bg-glow {
+            position: fixed; top: -40%; left: 50%; transform: translateX(-50%);
+            width: 800px; max-width: 100vw; height: 600px;
+            background: radial-gradient(ellipse, rgba(99, 102, 241, 0.08) 0%, rgba(99, 102, 241, 0.02) 40%, transparent 70%);
+            pointer-events: none; z-index: 0;
+        }
+
+        nav {
+            position: relative; z-index: 10; padding: 18px 40px;
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid var(--border); background: rgba(6, 6, 11, 0.6); backdrop-filter: blur(12px);
+        }
+        .logo { font-size: 21px; font-weight: 800; color: #fff; letter-spacing: -0.7px; text-decoration: none; }
+        .logo .dot { color: var(--accent); }
+        .nav-links { display: flex; gap: 4px; }
+        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 13px; font-weight: 500; padding: 7px 12px; border-radius: 8px; }
+        .nav-links a:hover { color: #fff; background: var(--surface-2); }
+
+        main { position: relative; z-index: 1; max-width: 860px; margin: 0 auto; padding: 0 24px 80px; }
+
+        /* Hero */
+        .hero { margin: 64px 0 36px; }
+        .eyebrow { font-size: 12px; font-weight: 600; letter-spacing: 0.5px; color: var(--accent-soft); text-transform: uppercase; margin-bottom: 14px; }
+        .hero h1 { font-size: 46px; font-weight: 800; line-height: 1.08; letter-spacing: -1.3px; color: #fff; max-width: 700px; margin-bottom: 22px; }
+        .hero p { font-size: 16.5px; color: var(--text-secondary); max-width: 640px; margin-bottom: 12px; }
+        .hero p b { color: var(--text); font-weight: 600; }
+
+        .memo-key { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+        .memo-key span { font-size: 13px; color: var(--text-secondary); background: var(--surface); border: 1px solid var(--border); border-radius: 100px; padding: 6px 12px; }
+        .memo-key b { color: var(--text); font-weight: 600; margin-right: 4px; }
+
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+        .section-label { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+
+        /* Picker */
+        .examples { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 26px; }
+        .chip-btn {
+            font: inherit; font-size: 14px; font-weight: 500; color: var(--text); cursor: pointer;
+            background: var(--surface); border: 1px solid var(--border); border-radius: 100px; padding: 8px 16px;
+        }
+        .chip-btn:hover { background: var(--surface-2); }
+        .chip-btn[aria-pressed="true"] { border-color: var(--border-accent); background: var(--accent-glow); color: #fff; }
+
+        .input-card { padding: 18px; }
+        .input-card:focus-within { border-color: var(--border-accent); }
+        .field-label { font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px; display: block; }
+        .field-label span { color: var(--text-muted); font-weight: 400; }
+        .row { display: flex; gap: 8px; }
+        input, textarea {
+            width: 100%; min-width: 0; padding: 12px 14px; background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; color: #fff; font: inherit; font-size: 14px; outline: none;
+        }
+        input:focus, textarea:focus { border-color: var(--border-accent); }
+        textarea { resize: vertical; min-height: 60px; }
+        .btn { font: inherit; font-size: 14px; font-weight: 600; color: #fff; white-space: nowrap; background: var(--accent); border: none; border-radius: 10px; padding: 12px 20px; cursor: pointer; }
+        .btn:hover { filter: brightness(1.1); }
+        .btn:disabled { opacity: 0.5; cursor: wait; }
+        .hint { font-size: 12px; color: var(--text-muted); margin-top: 10px; }
+        details.more-input summary { font-size: 13px; color: var(--text-secondary); cursor: pointer; margin-top: 12px; }
+        details.more-input textarea { margin-top: 8px; }
+
+        .status { margin: 24px 0 0; font-size: 14px; color: var(--text-secondary); min-height: 20px; }
+        .status.error { color: var(--red); }
+
+        /* Memo */
+        #result { margin-top: 28px; display: none; }
+        .memo-head { padding: 24px; }
+        .memo-head h2 { font-size: 28px; font-weight: 800; letter-spacing: -0.6px; color: #fff; }
+        .memo-head .domain { color: var(--text-muted); font-size: 14px; margin-left: 8px; font-weight: 500; }
+        .memo-head .what { font-size: 15.5px; margin: 6px 0 14px; color: var(--text); }
+        .facts { display: flex; flex-wrap: wrap; gap: 6px 22px; font-size: 13px; color: var(--text-secondary); }
+        .facts b { color: var(--text); font-weight: 600; }
+        .bottom-line {
+            margin-top: 18px; padding: 14px 16px; border-radius: 10px;
+            background: var(--accent-glow); border: 1px solid var(--border-accent); font-size: 15px; color: #fff;
+        }
+        .bottom-line small { display: block; font-size: 11px; font-weight: 600; color: var(--accent-soft); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+
+        .block { margin-top: 30px; }
+        .block h3 { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+        .block .lede { font-size: 13px; color: var(--text-muted); margin-bottom: 12px; }
+
+        .claims { overflow: hidden; }
+        .claim { display: grid; grid-template-columns: 118px 1fr; gap: 14px; padding: 14px 16px; border-top: 1px solid var(--border); }
+        .claim:first-child { border-top: none; }
+        .pill { display: inline-block; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 100px; white-space: nowrap; height: fit-content; text-align: center; }
+        .pill.verified { color: var(--green); background: var(--green-bg); }
+        .pill.partly { color: var(--amber); background: var(--amber-bg); }
+        .pill.contradicted { color: var(--red); background: var(--red-bg); }
+        .pill.unverified { color: var(--text-secondary); background: var(--grey-bg); }
+        .claim .says { font-size: 14.5px; color: var(--text); }
+        .claim .says::before { content: "They say: "; color: var(--text-muted); }
+        .claim .evidence { font-size: 13.5px; color: var(--text-secondary); margin-top: 4px; }
+        .links { margin-top: 4px; display: flex; flex-wrap: wrap; gap: 4px 14px; }
+        .links a { font-size: 12px; color: var(--accent-soft); text-decoration: none; }
+        .links a:hover { text-decoration: underline; }
+
+        .moves { display: grid; gap: 8px; }
+        .move { padding: 13px 16px; }
+        .move .main { font-size: 14px; color: var(--text); }
+        .move .sub { font-size: 13px; color: var(--text-secondary); margin-top: 3px; }
+
+        .split { display: grid; grid-template-columns: 1fr 1.4fr; gap: 14px; }
+        .gaps { padding: 16px; }
+        .gaps ul { list-style: none; display: grid; gap: 8px; }
+        .gaps li { font-size: 13.5px; color: var(--text-secondary); padding-left: 16px; position: relative; }
+        .gaps li::before { content: ""; position: absolute; left: 0; top: 8px; width: 7px; height: 7px; border-radius: 50%; border: 1.5px solid var(--amber); }
+        .asks { padding: 16px; }
+        .asks ol { list-style: none; counter-reset: q; display: grid; gap: 12px; }
+        .asks li { counter-increment: q; position: relative; padding-left: 30px; font-size: 14px; color: var(--text); }
+        .asks li::before { content: counter(q); position: absolute; left: 0; top: 0; width: 20px; height: 20px; border-radius: 50%; background: var(--accent-glow); color: var(--accent-soft); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+        .asks li .why { display: block; font-size: 12.5px; color: var(--text-muted); margin-top: 2px; }
+        .card-title { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 12px; }
+
+        .note-card { padding: 18px; }
+        .note-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 8px; }
+        .note { white-space: pre-wrap; font-size: 14px; color: var(--text); }
+        .btn-ghost { font: inherit; font-size: 13px; color: var(--text-secondary); cursor: pointer; background: transparent; border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; }
+        .btn-ghost:hover { color: #fff; }
+
+        details.extra { margin-top: 18px; }
+        details.extra summary { cursor: pointer; font-size: 14px; color: var(--text-secondary); padding: 6px 0; }
+        details.extra .inner { padding: 10px 0 0; display: grid; gap: 14px; }
+        .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+        .tag { font-size: 12px; padding: 4px 10px; border-radius: 6px; background: var(--surface-2); color: var(--text-secondary); }
+        .small-list { list-style: none; display: grid; gap: 6px; font-size: 13px; color: var(--text-secondary); }
+
+        .sources { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 26px; font-size: 12px; color: var(--text-muted); }
+        .src { font-size: 12px; padding: 3px 9px; border-radius: 100px; border: 1px solid var(--border); color: var(--text-secondary); }
+        .src.ok { border-color: rgba(34, 197, 94, 0.25); color: #86efac; }
+        .src.miss { color: var(--text-muted); text-decoration: line-through; }
+        .src.off { border-color: rgba(245, 158, 11, 0.25); color: #fcd34d; }
+
+        /* Next on speedrun */
+        .next { margin-top: 72px; }
+        .next h3 { font-size: 22px; font-weight: 800; letter-spacing: -0.4px; color: #fff; margin-bottom: 8px; }
+        .next > p { font-size: 15px; color: var(--text-secondary); max-width: 640px; margin-bottom: 18px; }
+        .proposal { font-size: 11px; font-weight: 600; color: var(--amber); background: var(--amber-bg); border-radius: 100px; padding: 2px 8px; margin-left: 8px; vertical-align: middle; letter-spacing: 0.3px; }
+        .loop { padding: 18px; display: grid; gap: 10px; }
+        .loop-row { display: grid; grid-template-columns: 1fr 24px 1fr; gap: 10px; align-items: center; }
+        .loop-row .gapbox, .loop-row .ansbox { font-size: 13px; padding: 10px 12px; border-radius: 10px; }
+        .loop-row .gapbox { border: 1px dashed rgba(245, 158, 11, 0.35); color: var(--text-secondary); }
+        .loop-row .ansbox { border: 1px solid rgba(34, 197, 94, 0.25); color: var(--text); background: var(--green-bg); }
+        .loop-row .ansbox small, .loop-row .gapbox small { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 2px; }
+        .loop-row .arrow { color: var(--text-muted); text-align: center; }
+        .next ul { list-style: none; display: grid; gap: 10px; margin-top: 18px; }
+        .next li { font-size: 14px; color: var(--text-secondary); padding-left: 16px; position: relative; }
+        .next li::before { content: ""; position: absolute; left: 0; top: 9px; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+        .next li b { color: var(--text); font-weight: 600; }
+        .next code { font-size: 12px; background: var(--surface-2); padding: 2px 6px; border-radius: 4px; color: var(--text); }
+
+        footer { position: relative; z-index: 1; text-align: center; padding: 32px 16px 48px; font-size: 13px; color: var(--text-muted); border-top: 1px solid var(--border); }
+        footer a { color: var(--text-secondary); }
+
+        @media (max-width: 680px) {
+            nav { padding: 14px 16px; }
+            .nav-links a { padding: 6px 8px; font-size: 12px; }
+            main { padding: 0 16px 64px; }
+            .hero { margin: 40px 0 28px; }
+            .hero h1 { font-size: 33px; letter-spacing: -0.8px; }
+            .row { flex-direction: column; }
+            .memo-head { padding: 18px; }
+            .memo-head h2 { font-size: 24px; }
+            .claim { grid-template-columns: 1fr; gap: 8px; }
+            .claim .pill { justify-self: start; }
+            .split { grid-template-columns: 1fr; }
+            .loop-row { grid-template-columns: 1fr; }
+            .loop-row .arrow { transform: rotate(90deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-glow"></div>
+
+    <nav>
+        <a class="logo" href="/speedrun">clarity<span class="dot">.</span></a>
+        <div class="nav-links">
+            <a href="/docs#/default/analyze_for_candidate_api_candidate_post" target="_blank" rel="noopener">API</a>
+            <a href="https://github.com/deepgori/clarity" target="_blank" rel="noopener">GitHub</a>
+        </div>
+    </nav>
+
+    <main>
+        <section class="hero">
+            <div class="eyebrow">Clarity for candidates</div>
+            <h1>Before you join a startup, see what's true about it.</h1>
+            <p>When a VC invests in a startup, they spend weeks checking it out. When you join one, you bet years of your career on it and take part of your pay in equity, usually after a single call with the founder and a look at the website.</p>
+            <p>Clarity checks what a company says about itself against its code, hiring, news and pricing. You get a short memo: <b>what holds up, what's moving, what nobody has said publicly, and what to ask</b>. Each claim and signal links to its source.</p>
+            <div class="memo-key">
+                <span><b class="pill verified">Verified</b> backed by outside evidence</span>
+                <span><b class="pill partly">Partly</b> narrower than claimed</span>
+                <span><b class="pill unverified">Can't verify</b> ask the founder</span>
+            </div>
+        </section>
+
+        <section id="examples-section" style="display:none;">
+            <div class="section-label">Speedrun SR007 companies, already checked</div>
+            <div class="examples" id="examples"></div>
+        </section>
+
+        <section>
+            <div class="section-label">Check any startup</div>
+            <form class="card input-card" id="form" autocomplete="off">
+                <label class="field-label" for="domain">Company website</label>
+                <div class="row">
+                    <input id="domain" name="domain" type="text" placeholder="e.g. linear.app" required maxlength="100">
+                    <button class="btn" id="go" type="submit">Check it</button>
+                </div>
+                <details class="more-input">
+                    <summary>Add a line about you for a tailored note to the founder (optional)</summary>
+                    <textarea id="profile" name="profile" maxlength="1500" placeholder="What you build, and/or your GitHub URL"></textarea>
+                </details>
+                <div class="hint">Takes about 20 seconds. Results are cached for a few hours.</div>
+            </form>
+        </section>
+
+        <div class="status" id="status" role="status" aria-live="polite"></div>
+
+        <section id="result"></section>
+
+        <section class="next">
+            <h3>Where this goes on speedrun <span class="proposal">PROPOSAL</span></h3>
+            <p>The public web can't answer some of what candidates most need to know, like runway, team size and pay. Speedrun works with these founders directly, so the memo could close its own gaps.</p>
+            <div class="card loop">
+                <div class="loop-row">
+                    <div class="gapbox"><small>Memo says</small>Couldn't find: funding and runway</div>
+                    <div class="arrow">&rarr;</div>
+                    <div class="ansbox"><small>Founder answers once, shown as founder-provided</small>Every later candidate sees it</div>
+                </div>
+            </div>
+            <ul>
+                <li><b>Founders fill the gaps.</b> Each memo ends with what's still unanswered. A founder answers once and every candidate after sees it. Founders who are open about it get better-informed applicants.</li>
+                <li><b>One link on every jobs board listing.</b> "Check this company" opens the memo for that company.</li>
+                <li><b>A tool on the speedrun MCP server.</b> A job seeker's own agent can call it before drafting an application. It's already one API call: <code>POST /api/candidate</code> with a domain.</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        Built by <a href="https://github.com/deepgori" target="_blank" rel="noopener">Deep Gori</a>. Runs on Clarity, a company-research engine I built.
+    </footer>
+
+    <script>
+    (function () {
+        var SOURCE_LABELS = { website: "Website", news: "News", github: "GitHub", jobs: "Job boards", community: "Hacker News", reviews: "Reviews" };
+        var VERDICT_LABELS = { verified: "Verified", partly: "Partly", contradicted: "Contradicted", unverified: "Can't verify" };
+        var VERDICT_ORDER = { contradicted: 0, partly: 1, verified: 2, unverified: 3 };
+        var resultEl = document.getElementById("result");
+        var statusEl = document.getElementById("status");
+
+        function el(tag, attrs, children) {
+            var n = document.createElement(tag);
+            if (attrs) Object.keys(attrs).forEach(function (k) {
+                if (k === "text") n.textContent = attrs[k];
+                else if (k === "class") n.className = attrs[k];
+                else n.setAttribute(k, attrs[k]);
+            });
+            (children || []).forEach(function (c) { if (c) n.appendChild(typeof c === "string" ? document.createTextNode(c) : c); });
+            return n;
+        }
+
+        function host(url) {
+            try { return new URL(url).hostname.replace(/^www\./, ""); } catch (e) { return "source"; }
+        }
+
+        function link(url, label) {
+            if (!url || !/^https?:\/\//i.test(url)) return null;
+            return el("a", { href: url, target: "_blank", rel: "noopener nofollow", text: label || host(url) + " ↗" });
+        }
+
+        function links(pairs) {
+            var items = pairs.map(function (p) { return link(p[0], p[1]); }).filter(Boolean);
+            return items.length ? el("div", { class: "links" }, items) : null;
+        }
+
+        function block(title, lede, body) {
+            return el("div", { class: "block" }, [el("h3", { text: title }), lede ? el("p", { class: "lede", text: lede }) : null, body]);
+        }
+
+        function setStatus(msg, isError) {
+            statusEl.textContent = msg || "";
+            statusEl.className = "status" + (isError ? " error" : "");
+        }
+
+        function evidenceLabel(c) {
+            if (c >= 0.75) return "Strong";
+            if (c >= 0.5) return "Moderate";
+            return "Thin";
+        }
+
+        function render(data) {
+            resultEl.textContent = "";
+            var intel = data.intelligence;
+            if (!data.success || !intel) {
+                setStatus(data.error || "Something went wrong. Try again in a minute.", true);
+                resultEl.style.display = "none";
+                return;
+            }
+            setStatus("");
+
+            // Head: who they are + bottom line
+            var title = el("h2", {}, [intel.company_name, el("span", { class: "domain", text: intel.domain })]);
+            var facts = el("div", { class: "facts" });
+            [["Sells to", intel.who_they_sell_to], ["Stage", intel.stage], ["Evidence", evidenceLabel(intel.overall_confidence || 0)]].forEach(function (f) {
+                facts.appendChild(el("span", {}, [el("b", { text: f[0] + ": " }), f[1] || "Not found"]));
+            });
+            var head = el("div", { class: "card memo-head" }, [title, el("p", { class: "what", text: intel.what_they_do }), facts]);
+            if (intel.bottom_line) head.appendChild(el("div", { class: "bottom-line" }, [el("small", { text: "Bottom line" }), intel.bottom_line]));
+            resultEl.appendChild(head);
+
+            // Claims vs evidence
+            var claims = (intel.claims_checked || []).slice().sort(function (a, b) {
+                return (VERDICT_ORDER[a.verdict] || 9) - (VERDICT_ORDER[b.verdict] || 9);
+            });
+            var tensions = intel.contradictions || [];
+            if (claims.length || tensions.length) {
+                var box = el("div", { class: "card claims" });
+                claims.forEach(function (c) {
+                    box.appendChild(el("div", { class: "claim" }, [
+                        el("span", { class: "pill " + c.verdict, text: VERDICT_LABELS[c.verdict] || c.verdict }),
+                        el("div", {}, [
+                            el("div", { class: "says", text: c.claim }),
+                            el("div", { class: "evidence", text: c.evidence }),
+                            links([[c.claim_url, "where they say it ↗"], [c.evidence_url, "evidence: " + host(c.evidence_url) + " ↗"]])
+                        ])
+                    ]));
+                });
+                tensions.forEach(function (t) {
+                    box.appendChild(el("div", { class: "claim" }, [
+                        el("span", { class: "pill partly", text: "Sources differ" }),
+                        el("div", {}, [
+                            el("div", { class: "evidence", style: "margin-top:0", text: t.claim_a + " / " + t.claim_b }),
+                            el("div", { class: "evidence", text: "Likely: " + t.resolution })
+                        ])
+                    ]));
+                });
+                resultEl.appendChild(block("What they say vs. what's true", "Their own claims, checked against independent sources.", box));
+            }
+
+            // What's moving
+            var signals = intel.signals || [];
+            if (signals.length) {
+                var moves = el("div", { class: "moves" });
+                signals.forEach(function (s) {
+                    moves.appendChild(el("div", { class: "card move" }, [
+                        el("div", { class: "main", text: s.signal }),
+                        el("div", { class: "sub", text: s.why_it_matters }),
+                        links([[s.source_url]])
+                    ]));
+                });
+                resultEl.appendChild(block("What's moving", "Recent changes, and what they mean if you join.", moves));
+            }
+
+            // Gaps + questions side by side
+            var gaps = intel.evidence_gaps || [];
+            var qs = (intel.questions_for_founder || []).map(function (q) { return { q: q.question, why: q.based_on }; });
+            tensions.forEach(function (t) { if (t.question_to_ask) qs.push({ q: t.question_to_ask, why: "" }); });
+            if (gaps.length || qs.length) {
+                var split = el("div", { class: "split" });
+                if (gaps.length) {
+                    var ul = el("ul");
+                    gaps.forEach(function (g) { ul.appendChild(el("li", { text: g })); });
+                    split.appendChild(el("div", { class: "card gaps" }, [el("div", { class: "card-title", text: "Nobody has said publicly" }), ul]));
+                }
+                if (qs.length) {
+                    var ol = el("ol");
+                    qs.forEach(function (q) {
+                        ol.appendChild(el("li", {}, [q.q, q.why ? el("span", { class: "why", text: "Because: " + q.why }) : null]));
+                    });
+                    split.appendChild(el("div", { class: "card asks" }, [el("div", { class: "card-title", text: "So ask the founder" }), ol]));
+                }
+                resultEl.appendChild(block("Before the call", null, split));
+            }
+
+            // Intro note
+            if (data.intro_note) {
+                var copyBtn = el("button", { class: "btn-ghost", type: "button", text: "Copy" });
+                copyBtn.addEventListener("click", function () {
+                    try {
+                        navigator.clipboard.writeText(data.intro_note).then(function () {
+                            copyBtn.textContent = "Copied";
+                            setTimeout(function () { copyBtn.textContent = "Copy"; }, 1500);
+                        });
+                    } catch (e) { /* clipboard blocked; text stays selectable */ }
+                });
+                resultEl.appendChild(el("div", { class: "block" }, [el("div", { class: "card note-card" }, [
+                    el("div", { class: "note-head" }, [el("div", { class: "card-title", style: "margin:0", text: "Draft note to the founder" }), copyBtn]),
+                    el("div", { class: "note", text: data.intro_note })
+                ])]));
+            }
+
+            // Hiring + stack, folded away
+            var hiring = intel.hiring_signals || [];
+            var stack = intel.tech_stack || [];
+            if (hiring.length || stack.length) {
+                var inner = el("div", { class: "inner" });
+                if (hiring.length) {
+                    var hl = el("ul", { class: "small-list" });
+                    hiring.forEach(function (h) { hl.appendChild(el("li", { text: h })); });
+                    inner.appendChild(el("div", {}, [el("div", { class: "card-title", text: "Hiring" }), hl]));
+                }
+                if (stack.length) {
+                    var tags = el("div", { class: "tags" });
+                    stack.forEach(function (t) { tags.appendChild(el("span", { class: "tag", text: t })); });
+                    inner.appendChild(el("div", {}, [el("div", { class: "card-title", text: "Tech seen" }), tags]));
+                }
+                resultEl.appendChild(el("details", { class: "extra" }, [el("summary", { text: "Hiring details and tech stack" }), inner]));
+            }
+
+            // Sources checked
+            var unrelated = intel.unrelated_sources || [];
+            var src = el("div", { class: "sources" }, ["Checked:"]);
+            Object.keys(SOURCE_LABELS).forEach(function (k) {
+                var ok = data.sources_checked && data.sources_checked[k];
+                var off = ok && unrelated.indexOf(k) !== -1;
+                src.appendChild(el("span", {
+                    class: "src " + (off ? "off" : ok ? "ok" : "miss"),
+                    title: off ? "Results were about something else with the same name, ignored" : ok ? "Returned data" : "Checked, nothing found",
+                    text: SOURCE_LABELS[k] + (off ? " (other company)" : "")
+                }));
+            });
+            src.appendChild(el("span", { text: "· " + (intel.data_freshness || "") }));
+            resultEl.appendChild(src);
+
+            resultEl.style.display = "block";
+        }
+
+        // Pre-run examples: static JSON, so they load instantly and cost nothing per view
+        var examplesEl = document.getElementById("examples");
+        function selectExample(btn, file) {
+            Array.prototype.forEach.call(examplesEl.children, function (b) { b.setAttribute("aria-pressed", "false"); });
+            btn.setAttribute("aria-pressed", "true");
+            fetch("/static/speedrun/examples/" + encodeURIComponent(file))
+                .then(function (r) { return r.json(); })
+                .then(render)
+                .catch(function () { setStatus("Could not load that example.", true); });
+        }
+        fetch("/static/speedrun/examples/index.json")
+            .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
+            .then(function (list) {
+                if (!list || !list.length) return;
+                list.forEach(function (ex, i) {
+                    var b = el("button", { class: "chip-btn", type: "button", "aria-pressed": "false", text: ex.company_name });
+                    b.addEventListener("click", function () { selectExample(b, ex.file); });
+                    examplesEl.appendChild(b);
+                    if (i === 0) selectExample(b, ex.file);
+                });
+                document.getElementById("examples-section").style.display = "block";
+            })
+            .catch(function () { /* no examples published yet */ });
+
+        // Live run
+        var form = document.getElementById("form");
+        var go = document.getElementById("go");
+        form.addEventListener("submit", function (e) {
+            e.preventDefault();
+            var domain = document.getElementById("domain").value.trim();
+            var profile = document.getElementById("profile").value.trim();
+            if (!domain) return;
+            Array.prototype.forEach.call(examplesEl.children, function (b) { b.setAttribute("aria-pressed", "false"); });
+            go.disabled = true;
+            resultEl.style.display = "none";
+            var started = Date.now();
+            var msg = "Checking the site, news, GitHub, job boards, Hacker News and reviews...";
+            setStatus(msg);
+            var timer = setInterval(function () { setStatus(msg + " " + Math.round((Date.now() - started) / 1000) + "s"); }, 1000);
+            fetch("/api/candidate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ domain: domain, candidate_profile: profile || null })
+            })
+                .then(function (r) {
+                    if (r.status === 429) return { success: false, error: "Too many checks in a minute. Wait a moment and try again." };
+                    if (r.status === 422) return { success: false, error: "That doesn't look like a company website." };
+                    return r.json();
+                })
+                .then(render)
+                .catch(function () { setStatus("Could not reach the server. Try again.", true); })
+                .then(function () { clearInterval(timer); go.disabled = false; });
+        });
+    })();
+    </script>
+</body>
+</html>

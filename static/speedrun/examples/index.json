@@ -1,0 +1,22 @@
+[
+  {
+    "domain": "openwhispr.com",
+    "company_name": "OpenWhispr",
+    "file": "openwhispr.com.json"
+  },
+  {
+    "domain": "agentcat.com",
+    "company_name": "AgentCat",
+    "file": "agentcat.com.json"
+  },
+  {
+    "domain": "oruk.ai",
+    "company_name": "oruk",
+    "file": "oruk.ai.json"
+  },
+  {
+    "domain": "sonder.fyi",
+    "company_name": "Sonder",
+    "file": "sonder.fyi.json"
+  }
+]

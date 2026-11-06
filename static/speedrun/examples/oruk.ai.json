@@ -1,0 +1,161 @@
+{
+  "success": true,
+  "intelligence": {
+    "company_name": "oruk",
+    "domain": "oruk.ai",
+    "what_they_do": "Oruk provides speech AI models and an API that transcribe audio and label emotion, tone, speaking style, and related speech cues.",
+    "who_they_sell_to": "Developers and teams building for contact centers, voice of customer analysis, sales calls, meetings, and qualitative research.",
+    "industry": "Speech AI / developer API",
+    "stage": "Backed by a16z speedrun, date not stated",
+    "bottom_line": "Oruk has a real speech AI product surface, recent September 2026 research, active public repos, and packaged API pricing. The biggest unknowns are commercial traction, funding runway, and what roles they are actually hiring for.",
+    "claims_checked": [
+      {
+        "claim": "“Oruk Resonance 2 is now in preview.”",
+        "claim_url": "https://oruk.ai/company",
+        "verdict": "verified",
+        "evidence": "The pricing page separately says Resonance 2 uses the existing plan and API key and links to a Resonance 2 reference.",
+        "evidence_url": "https://oruk.ai/pricing"
+      },
+      {
+        "claim": "“We publish our evaluations so you can inspect the results before building with them.”",
+        "claim_url": "https://oruk.ai/company",
+        "verdict": "verified",
+        "evidence": "The oruk-bench GitHub repo describes a speech-emotion benchmark with 64k held-out clips, 7 classes, about 20 languages, and one scoring protocol for every model.",
+        "evidence_url": "https://github.com/oruk-ai/oruk-bench"
+      },
+      {
+        "claim": "“An open speech model for 25 languages” for Orukeet.",
+        "claim_url": "https://oruk.ai/research/orukeet",
+        "verdict": "unverified",
+        "evidence": "The provided GitHub data shows open_asr_leaderboard and oruk-bench, but no public repo or independent source confirming Orukeet itself is open or covers 25 languages; a model repo or external benchmark would settle it.",
+        "evidence_url": ""
+      },
+      {
+        "claim": "“Our API helps developers build AI” that recognizes hesitation or frustrated customers.",
+        "claim_url": "https://oruk.ai/",
+        "verdict": "verified",
+        "evidence": "The oruk-mcp repo describes hosted MCP tools for Oruk transcription, emotion and speaking-style analysis, plus Python/TypeScript SDKs and a Resonance-2 REST route.",
+        "evidence_url": "https://github.com/oruk-ai/oruk-mcp"
+      },
+      {
+        "claim": "“The lab also supports the oruk organization, our nonprofit arm bringing speech technology to endangered languages.”",
+        "claim_url": "https://oruk.ai/company",
+        "verdict": "unverified",
+        "evidence": "No independent source in the fetched data confirms the nonprofit arm or endangered-language work; incorporation records, grants, or public project outputs would settle it.",
+        "evidence_url": ""
+      }
+    ],
+    "signals": [
+      {
+        "signal": "Oruk is pushing Resonance 2 in preview, with the homepage and company page both asking users to apply for early access.",
+        "why_it_matters": "A candidate would likely be joining during a model launch, with work around preview users, API reliability, evals, and product feedback loops.",
+        "source_url": "https://oruk.ai/company",
+        "confidence": 0.88
+      },
+      {
+        "signal": "The research page highlights three September 2026 posts: Orukeet on Sep 11, 'Making Orukeet twice as fast' on Sep 22, and 'A voice. Many meanings.' on Sep 24.",
+        "why_it_matters": "The company is actively publishing model and research work, so a research or engineering role may involve turning recent experiments into usable product.",
+        "source_url": "https://oruk.ai/",
+        "confidence": 0.86
+      },
+      {
+        "signal": "GitHub shows 5 of 8 checked public repos with commits in the last 30 days, including oruk-connectors on 2026-11-02, oruk-mcp on 2026-10-10, and oruk-bench on 2026-10-07.",
+        "why_it_matters": "Public work is current and centered on integrations, hosted MCP tools, and benchmarking rather than only website copy.",
+        "source_url": "https://github.com/oruk-ai",
+        "confidence": 0.9
+      },
+      {
+        "signal": "The oruk-bench repo describes a speech-emotion benchmark with 64k held-out clips, 7 classes, and about 20 languages.",
+        "why_it_matters": "The company appears to be investing in measurable evaluation, which matters for candidates who care about model quality claims and reproducible research.",
+        "source_url": "https://github.com/oruk-ai/oruk-bench",
+        "confidence": 0.84
+      },
+      {
+        "signal": "Pricing is already packaged into Hobby, Builder, Production, and Enterprise plans, with Production at $199/month for 20,000 speech-understanding minutes and Enterprise offering security review and DPA.",
+        "why_it_matters": "This is more than a pure research demo, but enterprise readiness, support load, and real customer usage are still not independently visible.",
+        "source_url": "https://oruk.ai/pricing",
+        "confidence": 0.82
+      }
+    ],
+    "contradictions": [],
+    "questions_for_founder": [
+      {
+        "question": "Resonance 2 is in preview and uses the same speech-understanding allowance as Resonance 1. What has to be true before it moves from early access to general availability?",
+        "based_on": "The pricing page says Resonance 2 uses the existing plan and API key, while the company page says Resonance 2 is now in preview.",
+        "source_url": "https://oruk.ai/pricing"
+      },
+      {
+        "question": "The oruk-bench repo says the benchmark has 64k held-out clips, 7 classes, and about 20 languages. Which failure mode is currently driving model work: emotion accuracy, language coverage, latency, or diarization?",
+        "based_on": "GitHub repo oruk-bench describes the current benchmark scope.",
+        "source_url": "https://github.com/oruk-ai/oruk-bench"
+      },
+      {
+        "question": "The public GitHub work includes oruk-connectors for Codex and Claude, pipecat-oruk for WebRTC demos, and oruk-mcp for transcription and emotion tools. Are integrations the main product priority this quarter, or are they mostly examples around the core API?",
+        "based_on": "Several active public repos are integration-oriented, including oruk-connectors, pipecat-oruk, and oruk-mcp.",
+        "source_url": "https://github.com/oruk-ai"
+      },
+      {
+        "question": "The site says Oruk is backed by a16z speedrun, but I did not see a funding amount or runway. How much runway does the current plan assume?",
+        "based_on": "The company page states a16z speedrun backing, but no round size, valuation, or runway is stated.",
+        "source_url": "https://oruk.ai/company"
+      },
+      {
+        "question": "Your use cases span contact centers, voice of customer, sales calls, meetings, and qualitative research. Which one has the strongest current pull from users of Resonance 2?",
+        "based_on": "The homepage lists five use cases and asks users to apply for Resonance 2 early access.",
+        "source_url": "https://oruk.ai/"
+      }
+    ],
+    "evidence_gaps": [
+      "No listings found on Greenhouse, Lever or Ashby",
+      "News results were about something else with the same name, so they were ignored",
+      "Hacker News results were about something else with the same name, so they were ignored",
+      "Review results were about something else with the same name, so they were ignored",
+      "Funding amount and runway",
+      "Current customer traction",
+      "Team size beyond the visible company page",
+      "Compensation and role scope",
+      "Remote policy and hiring process"
+    ],
+    "unrelated_sources": [
+      "news",
+      "community",
+      "reviews"
+    ],
+    "tech_stack": [
+      "Cloudflare",
+      "Swift",
+      "Python",
+      "Shell",
+      "C++",
+      "Ruby",
+      "C",
+      "Dockerfile",
+      "JavaScript"
+    ],
+    "hiring_signals": [
+      "The /careers URL returned a 404 page on 2026-11-06.",
+      "External ATS checks found zero listings on Greenhouse, Lever, and Ashby for slugs oruk, orukai, oruk-ai, and orukhq."
+    ],
+    "sources_used": [
+      "https://oruk.ai/",
+      "https://oruk.ai/company",
+      "https://oruk.ai/pricing",
+      "https://github.com/oruk-ai",
+      "https://github.com/oruk-ai/oruk-bench",
+      "https://github.com/oruk-ai/oruk-mcp"
+    ],
+    "overall_confidence": 0.4,
+    "data_freshness": "Data is current as of 2026-11-06"
+  },
+  "intro_note": "Resonance 2 is in preview, and the site is routing users to apply for early access while pricing already packages speech-understanding minutes. That reads like the product is close enough to sell, but still gated on a specific reliability or rollout bar.\n\n[one line on what you have built]\n\nWhat has to be true before Resonance 2 moves from early access to general availability? Happy to do a 20-minute call if useful.",
+  "sources_checked": {
+    "website": true,
+    "news": true,
+    "github": true,
+    "jobs": false,
+    "community": true,
+    "reviews": true
+  },
+  "error": null,
+  "processing_time_ms": 38978
+}

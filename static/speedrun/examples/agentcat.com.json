@@ -1,0 +1,172 @@
+{
+  "success": true,
+  "intelligence": {
+    "company_name": "AgentCat",
+    "domain": "agentcat.com",
+    "what_they_do": "AgentCat provides analytics and observability for MCP servers, Claude Connectors, and ChatGPT Apps, including session replay, error grouping, and goal classification.",
+    "who_they_sell_to": "Developers and teams building MCP servers, Claude Connectors, and ChatGPT Apps.",
+    "industry": "AI developer tools / observability",
+    "stage": "Not stated",
+    "bottom_line": "AgentCat has a live product, public pricing, active multi-language SDK work, and a 2026 rebrand from MCPcat to AgentCat. Funding, team size, customer traction, and any actual hiring plan are not public, so ask about runway and role scope first.",
+    "claims_checked": [
+      {
+        "claim": "AgentCat is analytics and observability for Claude Connectors and ChatGPT Apps.",
+        "claim_url": "https://agentcat.com/",
+        "verdict": "partly",
+        "evidence": "GitHub repo descriptions repeatedly back the MCP analytics part, calling AgentCat an analytics platform for MCP server owners, but the provided external sources do not independently confirm Claude Connector or ChatGPT App usage.",
+        "evidence_url": "https://github.com/agentcathq/agentcat-typescript-sdk"
+      },
+      {
+        "claim": "AgentCat provides SDK support for MCP server owners.",
+        "claim_url": "https://agentcat.com/",
+        "verdict": "verified",
+        "evidence": "The GitHub org has active public SDK repos for TypeScript, Python, Java, Ruby, Rust, and C#, with six repos committed within 30 days as of Nov 6, 2026.",
+        "evidence_url": "https://github.com/agentcathq/agentcat-typescript-sdk"
+      },
+      {
+        "claim": "MCPcat is now AgentCat, with the same team and same mission.",
+        "claim_url": "https://agentcat.com/blog/mcpcat-is-now-agentcat/",
+        "verdict": "unverified",
+        "evidence": "No independent source in the data confirms the rebrand continuity; founder identities, old MCPcat materials, or incorporation history would settle it.",
+        "evidence_url": ""
+      },
+      {
+        "claim": "AgentCat is 'Enterprise-ready from day one.'",
+        "claim_url": "https://agentcat.com/",
+        "verdict": "unverified",
+        "evidence": "The pricing page lists enterprise features such as SSO/SAML, audit logs, exports, Slack support, and SLA guarantees, but no independent customer, compliance, or security source confirms enterprise readiness.",
+        "evidence_url": ""
+      },
+      {
+        "claim": "GibsonAI integrated AgentCat and achieved 45% faster tool performance through data-driven optimizations.",
+        "claim_url": "https://agentcat.com/blog/gibson-ai/",
+        "verdict": "unverified",
+        "evidence": "The GibsonAI result appears only in AgentCat's own blog data here; a GibsonAI post, customer quote outside AgentCat, or case-study metrics from another source would settle it.",
+        "evidence_url": ""
+      }
+    ],
+    "signals": [
+      {
+        "signal": "The company rebranded from MCPcat to AgentCat on Jul 4, 2026, saying it was the same team and mission and that SDK migration would not break existing users.",
+        "why_it_matters": "A recent rename suggests the product scope is moving beyond MCP-only analytics toward broader agent app observability, so ask what changed besides branding.",
+        "source_url": "https://agentcat.com/blog/mcpcat-is-now-agentcat/",
+        "confidence": 0.8
+      },
+      {
+        "signal": "6 of 7 checked public GitHub repos had commits within 30 days, including agentcat-typescript-sdk, agentcat-python-sdk, agentcat-java-sdk, agentcat-ruby-sdk, agentcat-rust-sdk, and agentcat-csharp-sdk on Nov 3-4, 2026.",
+        "why_it_matters": "The public SDK surface is actively maintained across several languages, which points to integration work and developer-support burden for anyone joining engineering.",
+        "source_url": "https://github.com/agentcathq/agentcat-typescript-sdk",
+        "confidence": 0.9
+      },
+      {
+        "signal": "The TypeScript SDK has 127 stars and 18 forks, and the Python SDK has 53 stars and 9 forks; the Ruby, Java, Rust, and C# SDKs have 0 stars each.",
+        "why_it_matters": "Adoption appears concentrated in TypeScript and Python, while newer or less-used SDKs may still need packaging, docs, and customer-driven hardening.",
+        "source_url": "https://github.com/agentcathq/agentcat-typescript-sdk",
+        "confidence": 0.85
+      },
+      {
+        "signal": "The pricing page defines a Free plan with 500 sessions per month, a Growth plan at $160 per month with 2,000 sessions, and an Enterprise plan with SSO/SAML, audit logs, exports, Slack support, and SLA guarantees.",
+        "why_it_matters": "The company has packaged a self-serve and enterprise motion, so product work likely spans onboarding, billing limits, retention windows, and security controls.",
+        "source_url": "https://agentcat.com/pricing/",
+        "confidence": 0.85
+      },
+      {
+        "signal": "The blog lists a customer story dated Aug 4, 2025 claiming GibsonAI used AgentCat for MCP server observability and achieved 45% faster tool performance through data-driven optimizations.",
+        "why_it_matters": "There is at least one named customer narrative, but it is company-published, so candidates should ask for current customer count and how many deployments resemble GibsonAI.",
+        "source_url": "https://agentcat.com/blog/gibson-ai/",
+        "confidence": 0.65
+      },
+      {
+        "signal": "The public careers URL returns a 'Meow?' not-found page, and checked ATS platforms found 0 open roles for slugs agentcat, agentcathq, agentcat-hq, and agentcatinc.",
+        "why_it_matters": "If you are taking a founder call, it may be for an unlisted or opportunistic role, so clarify role scope, timing, and compensation early.",
+        "source_url": "https://agentcat.com/careers",
+        "confidence": 0.75
+      }
+    ],
+    "contradictions": [],
+    "questions_for_founder": [
+      {
+        "question": "After the Jul 4, 2026 MCPcat-to-AgentCat rebrand, what product scope changed in practice: more Claude Connectors and ChatGPT Apps, or still mostly MCP server analytics?",
+        "based_on": "The rebrand post says 'MCPcat is now AgentCat' with the same team and mission, while the homepage now leads with Claude Connectors and ChatGPT Apps.",
+        "source_url": "https://agentcat.com/blog/mcpcat-is-now-agentcat/"
+      },
+      {
+        "question": "The SDK activity is broad, with TypeScript, Python, Java, Ruby, Rust, and C# repos updated on Nov 3-4, 2026; which SDKs are customer-critical today, and which are bets?",
+        "based_on": "GitHub shows 6 of 7 checked public repos active within 30 days across six language SDKs.",
+        "source_url": "https://github.com/agentcathq/agentcat-typescript-sdk"
+      },
+      {
+        "question": "The pricing page has Free, $160/month Growth, and custom Enterprise tiers; what percentage of current usage is self-serve versus founder-led enterprise sales?",
+        "based_on": "Pricing defines self-serve plans with 500 and 2,000 monthly session limits, plus Enterprise with SSO/SAML, audit logs, exports, Slack support, and SLA guarantees.",
+        "source_url": "https://agentcat.com/pricing/"
+      },
+      {
+        "question": "Your site says 'Enterprise-ready from day one' and lists SSO/SAML, audit logs, S3/Snowflake/BigQuery exports, and SLA guarantees; which of those are live with paying customers today?",
+        "based_on": "The enterprise-readiness claim is on the homepage and Enterprise plan, but no independent source confirms production enterprise deployments.",
+        "source_url": "https://agentcat.com/pricing/"
+      },
+      {
+        "question": "There are 0 open roles on the checked careers and ATS sources as of Nov 6, 2026; what role are you actually considering me for, what is the hiring timeline, and is there a compensation range?",
+        "based_on": "The careers URL returns a not-found page and Greenhouse, Lever, and Ashby searches found 0 listings for AgentCat-related slugs.",
+        "source_url": "https://agentcat.com/careers"
+      }
+    ],
+    "evidence_gaps": [
+      "No listings found on Greenhouse, Lever or Ashby",
+      "News results were about something else with the same name, so they were ignored",
+      "Hacker News results were about something else with the same name, so they were ignored",
+      "Funding and runway",
+      "Team size and founders' backgrounds",
+      "Current customer count and revenue",
+      "Compensation and equity for any unlisted role",
+      "Security certifications or compliance status"
+    ],
+    "unrelated_sources": [
+      "news",
+      "community"
+    ],
+    "tech_stack": [
+      "Rust",
+      "Python",
+      "Java",
+      "TypeScript",
+      "Ruby",
+      "Shell",
+      "JavaScript",
+      "Makefile",
+      "C#"
+    ],
+    "hiring_signals": [
+      "0 open roles on the structured careers data from https://agentcat.com/careers.",
+      "0 external job listings found across checked ATS platforms: Greenhouse, Lever, and Ashby.",
+      "Checked ATS slugs were agentcat, agentcathq, agentcat-hq, and agentcatinc."
+    ],
+    "sources_used": [
+      "https://agentcat.com/",
+      "https://agentcat.com/pricing/",
+      "https://agentcat.com/blog/",
+      "https://agentcat.com/blog/mcpcat-is-now-agentcat/",
+      "https://agentcat.com/blog/gibson-ai/",
+      "https://agentcat.com/careers",
+      "https://github.com/agentcathq/agentcat-typescript-sdk",
+      "https://github.com/agentcathq/agentcat-python-sdk",
+      "https://github.com/agentcathq/agentcat-java-sdk",
+      "https://github.com/agentcathq/agentcat-ruby-sdk",
+      "https://github.com/agentcathq/agentcat-rust-sdk",
+      "https://github.com/agentcathq/agentcat-csharp-sdk"
+    ],
+    "overall_confidence": 0.6,
+    "data_freshness": "Data is current as of 2026-11-06"
+  },
+  "intro_note": "6 of 7 checked public GitHub repos had commits within 30 days, with six SDKs updated on Nov 3-4, 2026. That reads like AgentCat is keeping the surface area broad after the MCPcat rebrand, not just maintaining one primary SDK.\n\n[one line on what you have built]\n\nWhich SDKs are customer-critical today, and which are bets? Happy to do a 20-minute call if it’s useful.",
+  "sources_checked": {
+    "website": true,
+    "news": true,
+    "github": true,
+    "jobs": false,
+    "community": true,
+    "reviews": true
+  },
+  "error": null,
+  "processing_time_ms": 34479
+}
