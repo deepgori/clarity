@@ -154,7 +154,7 @@
     "overall_confidence": 0.78,
     "data_freshness": "Data is current as of 2026-11-06"
   },
-  "intro_note": "5 of 6 checked repos had commits within 30 days, including openwhispr on 2026-11-06 and model-registry on 2026-11-04. That reads like a product moving quickly while still keeping a lot of the core work in the open.\n\n[one line on what you have built]\n\nWhich work is happening in public repos versus private repos now? Happy to do a 20-minute call if useful.",
+  "intro_note": "5 of 6 checked GitHub repos had commits within 30 days, including openwhispr on 2026-11-06 and model-registry on 2026-11-04. That reads like the product is moving fast while the surface expands into Agent mode, MCP, API, CLI, and enterprise controls.\n\nI’ve built data pipelines and internal APIs in Python and TypeScript, which is close to the backend/API work your expanding product surface seems to need.\n\nWhat should the Founding Engineer own in the first 90 days? Happy to do a 20-minute call if useful.",
   "sources_checked": {
     "website": true,
     "news": true,
@@ -164,5 +164,6 @@
     "reviews": true
   },
   "error": null,
-  "processing_time_ms": 39977
+  "processing_time_ms": 39977,
+  "sample_profile": "Backend engineer, 3 years. Python and TypeScript. Built data pipelines and internal APIs at a fintech startup."
 }

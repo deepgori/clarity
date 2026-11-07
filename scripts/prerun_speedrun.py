@@ -84,8 +84,39 @@ async def run(domains: list[str]) -> int:
     return 1 if failures else 0
 
 
+# A clearly labeled sample, so the example notes show the tailored version
+# instead of a fill-in placeholder. The page displays it next to the note.
+SAMPLE_PROFILE = (
+    "Backend engineer, 3 years. Python and TypeScript. Built data pipelines and "
+    "internal APIs at a fintech startup."
+)
+
+
+async def regenerate_notes(profile: str) -> int:
+    """Rewrite only the intro notes of existing examples for a sample candidate.
+
+    The memo itself (claims, signals, gaps) is left exactly as reviewed.
+    """
+    from models.schemas import CandidateIntelligence
+    from synthesis.candidate import generate_intro_note
+
+    for f in sorted(OUT_DIR.glob("*.json")):
+        if f.name == "index.json":
+            continue
+        data = json.loads(f.read_text())
+        intel = CandidateIntelligence(**data["intelligence"])
+        data["intro_note"] = await generate_intro_note(intel, profile)
+        data["sample_profile"] = profile
+        f.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n")
+        print(f"note rewritten: {f.name}")
+    return 0
+
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print(__doc__)
         sys.exit(2)
+    if sys.argv[1] == "--notes-only":
+        profile = " ".join(sys.argv[2:]).strip() or SAMPLE_PROFILE
+        sys.exit(asyncio.run(regenerate_notes(profile)))
     sys.exit(asyncio.run(run(sys.argv[1:])))

@@ -128,7 +128,7 @@
     "overall_confidence": 0.6,
     "data_freshness": "Data is current as of 2026-11-06"
   },
-  "intro_note": "4 open Technical Staff roles in New York, all senior and on-site or in-office, makes Sonder look like it is still in the core build phase. The 2026-11-05 homepage says the product watches a user’s screen locally to learn workflows, preferences, and reusable skills.\n\n[one line on what you have built]\n\nFor Local Inference & Kernels, what has to run locally today: screen capture, vision inference, post-training, or all of it? Happy to do a 20-minute call if useful.",
+  "intro_note": "4 open roles, all senior Member of Technical Staff in New York, makes Sonder look like it is still building the core technical loop. The 2026-11-05 homepage points to local vision models watching the screen to learn workflows.\n\nI’ve built data pipelines and internal APIs at a fintech startup in Python and TypeScript, which seems close to the backend work needed to turn observed workflows into reusable skills.\n\nWhat is the first concrete user workflow you are trying to make work end to end? Happy to do a 20-minute call if useful.",
   "sources_checked": {
     "website": true,
     "news": true,
@@ -138,5 +138,6 @@
     "reviews": true
   },
   "error": null,
-  "processing_time_ms": 26948
+  "processing_time_ms": 26948,
+  "sample_profile": "Backend engineer, 3 years. Python and TypeScript. Built data pipelines and internal APIs at a fintech startup."
 }
