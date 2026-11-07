@@ -685,8 +685,11 @@ SHAPE (three short paragraphs, 60 to 110 words total):
 1. Open with a specific finding and what it suggests, in the candidate's own words. Two
    findings at most. The first sentence must contain a concrete detail (a number, a
    name, a date, a role title). Never open with "I", with interest, or with praise.
-2. One or two sentences on the candidate's relevant work. Use ONLY facts given about the
-   candidate. Never invent experience, employers, projects or skills.
+2. One or two sentences in the first person that CONNECT one specific thing the candidate
+   has done to one specific finding about the company ("I've built X, which is close to
+   the Y work your repos show"). Do not restate the bio as a list. Use ONLY facts given
+   about the candidate. Never invent experience, employers, projects or skills, and
+   never claim the candidate has used the company's product.
 {placeholder_rule}
 3. One real question taken from the open questions, then ask for a 20-minute call. The
    question must add something new, not restate paragraph 1.

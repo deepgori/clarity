@@ -147,7 +147,7 @@
     "overall_confidence": 0.4,
     "data_freshness": "Data is current as of 2026-11-06"
   },
-  "intro_note": "Resonance 2 is in preview, and the site is routing users to apply for early access while pricing already packages speech-understanding minutes. That reads like the product is close enough to sell, but still gated on a specific reliability or rollout bar.\n\n[one line on what you have built]\n\nWhat has to be true before Resonance 2 moves from early access to general availability? Happy to do a 20-minute call if useful.",
+  "intro_note": "Resonance 2 is in preview, while pricing already has Production at $199/month for 20,000 speech-understanding minutes. That reads like the API is past experimentation and the next constraint is reliability at real customer volume.\n\nI’ve built data pipelines and internal APIs in Python and TypeScript, which is close to the connector and API surface work your public repos show around oruk-connectors and oruk-mcp.\n\nWhat has to be true before Resonance 2 moves from early access to general availability? Happy to do a 20-minute call if useful.",
   "sources_checked": {
     "website": true,
     "news": true,
@@ -157,5 +157,6 @@
     "reviews": true
   },
   "error": null,
-  "processing_time_ms": 38978
+  "processing_time_ms": 38978,
+  "sample_profile": "Backend engineer, 3 years. Python and TypeScript. Built data pipelines and internal APIs at a fintech startup."
 }
