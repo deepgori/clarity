@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clarity for candidates</title>
+    <meta name="description" content="Before you join a startup, see what's true about it. Clarity checks what a company says against its code, hiring, news and pricing.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --paper: #f6f4ee;
+            --paper-2: #efece3;
+            --ink: #1b1a17;
+            --ink-2: #4b4943;
+            --ink-3: #85837a;
+            --rule: #dcd8cc;
+            --rule-strong: #1b1a17;
+            --accent: #1f5c45;
+            --verified: #1f6b3f;
+            --partly: #94660a;
+            --contradicted: #a33a2b;
+            --unverified: #75736b;
+            --serif: "Newsreader", Georgia, "Times New Roman", serif;
+            --sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+            --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --paper: #151513;
+                --paper-2: #1c1c19;
+                --ink: #ebe9e2;
+                --ink-2: #b7b4ab;
+                --ink-3: #7f7d74;
+                --rule: #2f2e2a;
+                --rule-strong: #ebe9e2;
+                --accent: #84c6a6;
+                --verified: #7fc89c;
+                --partly: #e2b456;
+                --contradicted: #e88b7b;
+                --unverified: #9c9a91;
+            }
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { -webkit-text-size-adjust: 100%; }
+        body {
+            background: var(--paper);
+            color: var(--ink);
+            font-family: var(--serif);
+            font-size: 18px;
+            line-height: 1.55;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+        a { color: inherit; text-decoration-color: var(--rule); text-underline-offset: 3px; }
+        a:hover { text-decoration-color: var(--ink); }
+        ::selection { background: var(--accent); color: var(--paper); }
+
+        .wrap { max-width: 1040px; margin: 0 auto; padding: 0 32px; }
+
+        /* Masthead */
+        .masthead {
+            display: flex; align-items: baseline; justify-content: space-between;
+            padding: 22px 0 18px; border-bottom: 1px solid var(--rule-strong);
+            font-family: var(--sans); font-size: 13px;
+        }
+        .wordmark { font-family: var(--serif); font-size: 22px; font-weight: 600; letter-spacing: -0.3px; text-decoration: none; }
+        .wordmark span { font-family: var(--mono); font-size: 12px; font-weight: 400; color: var(--ink-3); margin-left: 8px; letter-spacing: 0; }
+        .masthead nav { display: flex; gap: 20px; }
+        .masthead nav a { text-decoration: none; color: var(--ink-2); }
+        .masthead nav a:hover { color: var(--ink); }
+
+        /* Layout: label rail + column */
+        .sec { display: grid; grid-template-columns: 190px minmax(0, 660px); gap: 0 40px; padding: 36px 0; border-bottom: 1px solid var(--rule); }
+        .sec:last-child { border-bottom: none; }
+        .rail { font-family: var(--sans); font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); padding-top: 6px; }
+        .rail small { display: block; font-weight: 400; letter-spacing: 0; text-transform: none; margin-top: 4px; font-size: 12.5px; line-height: 1.45; }
+
+        /* Hero */
+        .hero { padding: 64px 0 48px; border-bottom: 1px solid var(--rule); }
+        .hero .kicker { font-family: var(--mono); font-size: 12.5px; color: var(--accent); margin-bottom: 20px; letter-spacing: 0.02em; }
+        .hero h1 { font-weight: 500; font-size: 64px; line-height: 1.02; letter-spacing: -1.6px; max-width: 820px; }
+        .hero h1 em { font-style: italic; color: var(--accent); }
+        .hero .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 34px; max-width: 900px; }
+        .hero p { font-size: 18.5px; color: var(--ink-2); }
+        .hero p b { color: var(--ink); font-weight: 600; }
+        .legend { display: flex; flex-wrap: wrap; gap: 8px 26px; margin-top: 30px; font-family: var(--sans); font-size: 13.5px; color: var(--ink-2); }
+        .legend span b { font-weight: 600; margin-right: 6px; }
+
+        /* Verdict marks */
+        .mark { font-family: var(--sans); font-weight: 600; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; }
+        .mark i { font-style: normal; display: inline-block; width: 1.1em; }
+        .mark.verified { color: var(--verified); }
+        .mark.partly { color: var(--partly); }
+        .mark.contradicted { color: var(--contradicted); }
+        .mark.unverified { color: var(--unverified); }
+
+        /* Picker + form */
+        .picker { font-family: var(--sans); font-size: 15px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 22px; }
+        .picker button {
+            font: inherit; background: none; border: none; cursor: pointer; color: var(--ink-2); padding: 2px 0;
+            border-bottom: 1.5px solid transparent;
+        }
+        .picker button:hover { color: var(--ink); border-bottom-color: var(--rule); }
+        .picker button[aria-pressed="true"] { color: var(--ink); font-weight: 600; border-bottom-color: var(--accent); }
+        .check { margin-top: 26px; font-family: var(--sans); }
+        .check label { display: block; font-size: 13px; color: var(--ink-3); margin-bottom: 6px; }
+        .check .row { display: flex; gap: 12px; align-items: flex-end; }
+        .check input, .check textarea {
+            width: 100%; min-width: 0; font: inherit; font-size: 16px; color: var(--ink); background: transparent;
+            border: none; border-bottom: 1.5px solid var(--ink-3); padding: 8px 0; outline: none; border-radius: 0;
+        }
+        .check input:focus, .check textarea:focus { border-bottom-color: var(--accent); }
+        .check input::placeholder, .check textarea::placeholder { color: var(--ink-3); }
+        .check textarea { resize: vertical; min-height: 44px; font-size: 15px; }
+        .check button[type="submit"] {
+            font: inherit; font-size: 14px; font-weight: 600; color: var(--paper); background: var(--ink);
+            border: none; padding: 10px 20px; cursor: pointer; border-radius: 2px; white-space: nowrap;
+        }
+        .check button[type="submit"]:hover { background: var(--accent); }
+        .check button:disabled { opacity: 0.5; cursor: wait; }
+        .check details { margin-top: 14px; font-size: 13.5px; color: var(--ink-2); }
+        .check summary { cursor: pointer; }
+        .check details textarea { margin-top: 8px; }
+        .fine { font-family: var(--sans); font-size: 12.5px; color: var(--ink-3); margin-top: 12px; }
+        .status { font-family: var(--mono); font-size: 13px; color: var(--ink-2); margin-top: 18px; min-height: 18px; }
+        .status.error { color: var(--contradicted); }
+
+        /* Memo */
+        #memo { display: none; }
+        .memo-top { padding: 44px 0 8px; }
+        .memo-top .kicker { font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; color: var(--ink-3); text-transform: uppercase; }
+        .memo-top h2 { font-size: 46px; font-weight: 500; letter-spacing: -1px; line-height: 1.05; margin-top: 8px; }
+        .memo-top .what { font-size: 20px; color: var(--ink-2); margin-top: 10px; max-width: 760px; }
+        .facts { display: grid; grid-template-columns: 110px 1fr; gap: 6px 18px; margin-top: 24px; max-width: 760px; font-size: 15.5px; }
+        .facts dt { font-family: var(--mono); font-size: 12px; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.06em; padding-top: 3px; }
+        .facts dd { color: var(--ink); }
+
+        .bottom-line { font-size: 23px; line-height: 1.42; border-left: 3px solid var(--accent); padding-left: 22px; }
+
+        .claims { list-style: none; }
+        .claims li { display: grid; grid-template-columns: 132px 1fr; gap: 16px; padding: 16px 0; border-top: 1px solid var(--rule); }
+        .claims li:first-child { border-top: none; padding-top: 4px; }
+        .claims .says { font-size: 18px; }
+        .claims .says q { quotes: "\201C" "\201D"; }
+        .claims .ev { font-family: var(--sans); font-size: 14.5px; color: var(--ink-2); margin-top: 4px; line-height: 1.5; }
+
+        .moves { list-style: none; counter-reset: m; }
+        .moves li { position: relative; padding: 0 0 18px 0; }
+        .moves li:last-child { padding-bottom: 0; }
+        .moves .why { font-family: var(--sans); font-size: 14.5px; color: var(--ink-2); margin-top: 3px; }
+
+        sup.fn { font-family: var(--mono); font-size: 10.5px; margin-left: 2px; vertical-align: super; line-height: 0; }
+        sup.fn a { text-decoration: none; color: var(--accent); }
+        sup.fn a:hover { text-decoration: underline; }
+
+        .two { display: grid; grid-template-columns: 1fr 1.35fr; gap: 36px; }
+        .two h4 { font-family: var(--sans); font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 10px; }
+        .gaps { list-style: none; font-family: var(--sans); font-size: 15px; color: var(--ink-2); }
+        .gaps li { padding: 6px 0; border-top: 1px solid var(--rule); }
+        .gaps li:first-child { border-top: none; padding-top: 0; }
+        .asks { padding-left: 22px; }
+        .asks li { padding-left: 4px; margin-bottom: 14px; font-size: 17.5px; }
+        .asks li::marker { font-family: var(--mono); font-size: 13px; color: var(--accent); }
+        .asks .why { display: block; font-family: var(--sans); font-size: 13.5px; color: var(--ink-3); margin-top: 2px; }
+
+        .letter { background: var(--paper-2); border: 1px solid var(--rule); padding: 22px 24px; position: relative; }
+        .letter .note { white-space: pre-wrap; font-size: 17.5px; }
+        .letter button {
+            position: absolute; top: 12px; right: 12px; font-family: var(--sans); font-size: 12.5px; color: var(--ink-2);
+            background: var(--paper); border: 1px solid var(--rule); padding: 4px 10px; cursor: pointer; border-radius: 2px;
+        }
+        .letter button:hover { color: var(--ink); border-color: var(--ink-3); }
+
+        details.more { font-family: var(--sans); font-size: 14.5px; color: var(--ink-2); }
+        details.more summary { cursor: pointer; color: var(--ink); }
+        details.more ul { list-style: none; margin-top: 10px; }
+        details.more li { padding: 3px 0; }
+        details.more .stack { margin-top: 12px; font-family: var(--mono); font-size: 13px; }
+
+        .sources ol { padding-left: 26px; font-family: var(--mono); font-size: 12.5px; color: var(--ink-2); }
+        .sources li { padding: 2px 0; overflow-wrap: anywhere; word-break: break-all; }
+        .sources li::marker { color: var(--accent); }
+        .coverage { font-family: var(--sans); font-size: 13.5px; color: var(--ink-2); margin-top: 16px; display: flex; flex-wrap: wrap; gap: 2px 14px; }
+        .coverage span { white-space: nowrap; }
+        .coverage .ok { color: var(--ink); }
+        .coverage .no { color: var(--ink-3); text-decoration: line-through; }
+        .coverage .off { color: var(--partly); }
+
+        /* Proposal */
+        .proposal-tag { font-family: var(--mono); font-size: 11.5px; color: var(--partly); border: 1px solid currentColor; padding: 1px 6px; border-radius: 2px; margin-left: 10px; vertical-align: 4px; letter-spacing: 0.04em; }
+        .next h3 { font-size: 30px; font-weight: 500; letter-spacing: -0.5px; line-height: 1.15; }
+        .next > div > p { font-size: 18px; color: var(--ink-2); margin-top: 12px; }
+        .flow { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 12px; align-items: center; margin: 24px 0; font-family: var(--sans); font-size: 14px; }
+        .flow div { border: 1px solid var(--rule); padding: 12px 14px; color: var(--ink-2); background: var(--paper-2); }
+        .flow div b { display: block; font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 4px; }
+        .flow .arrow { font-family: var(--mono); color: var(--ink-3); border: none; background: none; padding: 0; }
+        .next ul { list-style: none; margin-top: 8px; }
+        .next li { padding: 12px 0; border-top: 1px solid var(--rule); font-size: 17px; color: var(--ink-2); }
+        .next li b { color: var(--ink); font-weight: 600; }
+        .next code { font-family: var(--mono); font-size: 13.5px; color: var(--ink); }
+
+        footer { border-top: 1px solid var(--rule-strong); padding: 22px 0 48px; font-family: var(--sans); font-size: 13px; color: var(--ink-3); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+
+        @media (max-width: 860px) {
+            .wrap { padding: 0 16px; }
+            .sec { grid-template-columns: minmax(0, 1fr); padding: 28px 0; }
+            .rail { margin-bottom: 12px; padding-top: 0; }
+            .hero { padding: 40px 0 32px; }
+            .hero h1 { font-size: 40px; letter-spacing: -0.9px; }
+            .hero .cols { grid-template-columns: 1fr; gap: 12px; margin-top: 22px; }
+            .memo-top h2 { font-size: 34px; }
+            .bottom-line { font-size: 20px; padding-left: 16px; }
+            .claims li { grid-template-columns: 1fr; gap: 4px; }
+            .two { grid-template-columns: 1fr; gap: 26px; }
+            .flow { grid-template-columns: 1fr; }
+            .flow .arrow { transform: rotate(90deg); justify-self: center; }
+            .facts { grid-template-columns: 88px 1fr; }
+            .check .row { flex-direction: column; align-items: stretch; }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <header class="masthead">
+            <a class="wordmark" href="/speedrun">Clarity<span>for candidates</span></a>
+            <nav>
+                <a href="/docs#/default/analyze_for_candidate_api_candidate_post" target="_blank" rel="noopener">API</a>
+                <a href="https://github.com/deepgori/clarity" target="_blank" rel="noopener">GitHub</a>
+            </nav>
+        </header>
+
+        <section class="hero">
+            <div class="kicker">Due diligence, for the person joining</div>
+            <h1>Before you join a startup, see <em>what's true</em> about it.</h1>
+            <div class="cols">
+                <p>When a VC invests in a startup, they spend weeks checking it out. When you join one, you bet years of your career on it and take part of your pay in equity, usually after one call with the founder and a look at the website.</p>
+                <p>Clarity checks what a company says about itself against its code, hiring, news and pricing, then writes a short memo: <b>what holds up, what's moving, what nobody has said publicly, and what to ask.</b> Claims and signals are footnoted to their sources.</p>
+            </div>
+            <div class="legend">
+                <span class="mark verified"><b><i>&#10003;</i>Verified</b></span>
+                <span class="mark partly"><b><i>&#9680;</i>Partly</b></span>
+                <span class="mark contradicted"><b><i>&#10005;</i>Contradicted</b></span>
+                <span class="mark unverified"><b><i>?</i>Can't verify</b></span>
+            </div>
+        </section>
+
+        <section class="sec">
+            <div class="rail">Read a memo<small>Speedrun SR007 companies, checked in advance.</small></div>
+            <div>
+                <div class="picker" id="examples"><span style="color:var(--ink-3)">Loading examples&hellip;</span></div>
+                <form class="check" id="form" autocomplete="off">
+                    <label for="domain">Or check any startup</label>
+                    <div class="row">
+                        <input id="domain" name="domain" type="text" placeholder="company website, e.g. linear.app" required maxlength="100">
+                        <button type="submit" id="go">Check it</button>
+                    </div>
+                    <details>
+                        <summary>Add a line about you for a tailored note to the founder</summary>
+                        <textarea id="profile" name="profile" maxlength="1500" placeholder="What you build, and/or your GitHub URL"></textarea>
+                    </details>
+                    <div class="fine">Takes about 20 seconds. Results are cached for a few hours.</div>
+                </form>
+                <div class="status" id="status" role="status" aria-live="polite"></div>
+            </div>
+        </section>
+
+        <article id="memo"></article>
+
+        <section class="sec next">
+            <div class="rail">Next</div>
+            <div>
+                <h3>Where this goes on speedrun<span class="proposal-tag">PROPOSAL</span></h3>
+                <p>Some of what candidates most need to know never shows up on the public web: runway, team size, pay. Speedrun works with these founders directly, so the memo can close its own gaps.</p>
+                <div class="flow">
+                    <div><b>Memo</b>Not public: funding and runway</div>
+                    <span class="arrow">&rarr;</span>
+                    <div><b>Founder</b>Answers once</div>
+                    <span class="arrow">&rarr;</span>
+                    <div><b>Every later candidate</b>Sees it, marked founder-provided</div>
+                </div>
+                <ul>
+                    <li><b>Founders fill the gaps.</b> Founders who are open about runway and pay get better-informed applicants, and candidates stop guessing.</li>
+                    <li><b>A link on every jobs board listing.</b> "Check this company" opens the memo for that company.</li>
+                    <li><b>A tool on the speedrun MCP server.</b> A job seeker's own agent can call it before drafting an application. It is already one call: <code>POST /api/candidate</code> with a domain.</li>
+                </ul>
+            </div>
+        </section>
+
+        <footer>
+            <span>Built by <a href="https://github.com/deepgori" target="_blank" rel="noopener">Deep Gori</a>. Runs on Clarity, a company-research engine I built.</span>
+            <span>Every memo is generated from public sources and may be incomplete.</span>
+        </footer>
+    </div>
+
+    <script>
+    (function () {
+        var SOURCE_LABELS = { website: "Website", news: "News", github: "GitHub", jobs: "Job boards", community: "Hacker News", reviews: "Reviews" };
+        var VERDICTS = {
+            verified: ["✓", "Verified"], partly: ["◐", "Partly"],
+            contradicted: ["✕", "Contradicted"], unverified: ["?", "Can't verify"]
+        };
+        var ORDER = { contradicted: 0, partly: 1, verified: 2, unverified: 3 };
+        var memoEl = document.getElementById("memo");
+        var statusEl = document.getElementById("status");
+
+        function el(tag, attrs, children) {
+            var n = document.createElement(tag);
+            if (attrs) Object.keys(attrs).forEach(function (k) {
+                if (k === "text") n.textContent = attrs[k];
+                else if (k === "class") n.className = attrs[k];
+                else n.setAttribute(k, attrs[k]);
+            });
+            (children || []).forEach(function (c) {
+                if (c === null || c === undefined || c === "") return;
+                n.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+            });
+            return n;
+        }
+        function setStatus(msg, isError) { statusEl.textContent = msg || ""; statusEl.className = "status" + (isError ? " error" : ""); }
+        function evidenceWord(c) { return c >= 0.75 ? "Strong" : c >= 0.5 ? "Moderate" : "Thin"; }
+        function mark(v) {
+            var m = VERDICTS[v] || ["", v];
+            return el("span", { class: "mark " + v }, [el("i", { text: m[0] }), m[1]]);
+        }
+        function sec(label, sub, body) {
+            return el("section", { class: "sec" }, [el("div", { class: "rail" }, [label, sub ? el("small", { text: sub }) : null]), el("div", {}, [body])]);
+        }
+
+        function render(data) {
+            memoEl.textContent = "";
+            var intel = data.intelligence;
+            if (!data.success || !intel) {
+                setStatus(data.error || "Something went wrong. Try again in a minute.", true);
+                memoEl.style.display = "none";
+                return;
+            }
+            setStatus("");
+
+            // Footnotes: one number per distinct source URL, in reading order
+            var cites = [];
+            function fn(url) {
+                if (!url || !/^https?:\/\//i.test(url)) return null;
+                var i = cites.indexOf(url);
+                if (i === -1) { cites.push(url); i = cites.length - 1; }
+                return el("sup", { class: "fn" }, [el("a", { href: "#src-" + (i + 1), title: url, text: String(i + 1) })]);
+            }
+
+            // Header
+            var checked = data.sources_checked || {};
+            var unrelated = intel.unrelated_sources || [];
+            var usable = Object.keys(SOURCE_LABELS).filter(function (k) { return checked[k] && unrelated.indexOf(k) === -1; }).length;
+            var facts = el("dl", { class: "facts" });
+            [["Sells to", intel.who_they_sell_to], ["Stage", intel.stage],
+             ["Evidence", evidenceWord(intel.overall_confidence || 0) + ", " + usable + " of 6 sources usable"],
+             ["As of", (intel.data_freshness || "").replace(/^Data is current as of /, "")]].forEach(function (f) {
+                facts.appendChild(el("dt", { text: f[0] })); facts.appendChild(el("dd", { text: f[1] || "Not found" }));
+            });
+            memoEl.appendChild(el("div", { class: "memo-top" }, [
+                el("div", { class: "kicker", text: "Candidate memo · " + intel.domain }),
+                el("h2", { text: intel.company_name }),
+                el("p", { class: "what", text: intel.what_they_do }),
+                facts
+            ]));
+
+            if (intel.bottom_line) memoEl.appendChild(sec("Bottom line", null, el("p", { class: "bottom-line", text: intel.bottom_line })));
+
+            // Claims
+            var claims = (intel.claims_checked || []).slice().sort(function (a, b) { return (ORDER[a.verdict] || 9) - (ORDER[b.verdict] || 9); });
+            var tensions = intel.contradictions || [];
+            if (claims.length || tensions.length) {
+                var ul = el("ul", { class: "claims" });
+                claims.forEach(function (c) {
+                    ul.appendChild(el("li", {}, [
+                        mark(c.verdict),
+                        el("div", {}, [
+                            el("div", { class: "says" }, [el("q", { text: c.claim }), fn(c.claim_url)]),
+                            el("div", { class: "ev" }, [c.evidence, fn(c.evidence_url)])
+                        ])
+                    ]));
+                });
+                tensions.forEach(function (t) {
+                    ul.appendChild(el("li", {}, [
+                        mark("partly"),
+                        el("div", {}, [el("div", { class: "says", text: t.claim_a + " / " + t.claim_b }), el("div", { class: "ev", text: "Likely: " + t.resolution })])
+                    ]));
+                });
+                memoEl.appendChild(sec("What they say vs. what's true", "Their own claims, checked against independent sources.", ul));
+            }
+
+            // Signals
+            var signals = intel.signals || [];
+            if (signals.length) {
+                var ol = el("ul", { class: "moves" });
+                signals.forEach(function (s) {
+                    ol.appendChild(el("li", {}, [el("div", {}, [s.signal, fn(s.source_url)]), el("div", { class: "why", text: s.why_it_matters })]));
+                });
+                memoEl.appendChild(sec("What's moving", "Recent changes, and what they mean if you join.", ol));
+            }
+
+            // Gaps + questions
+            var gaps = intel.evidence_gaps || [];
+            var qs = (intel.questions_for_founder || []).map(function (q) { return { q: q.question, why: q.based_on }; });
+            tensions.forEach(function (t) { if (t.question_to_ask) qs.push({ q: t.question_to_ask, why: "" }); });
+            if (gaps.length || qs.length) {
+                var two = el("div", { class: "two" });
+                if (gaps.length) {
+                    var g = el("ul", { class: "gaps" });
+                    gaps.forEach(function (x) { g.appendChild(el("li", { text: x })); });
+                    two.appendChild(el("div", {}, [el("h4", { text: "Not public" }), g]));
+                }
+                if (qs.length) {
+                    var a = el("ol", { class: "asks" });
+                    qs.forEach(function (q) { a.appendChild(el("li", {}, [q.q, q.why ? el("span", { class: "why", text: "Because: " + q.why }) : null])); });
+                    two.appendChild(el("div", {}, [el("h4", { text: "So ask the founder" }), a]));
+                }
+                memoEl.appendChild(sec("Before the call", null, two));
+            }
+
+            // Note
+            if (data.intro_note) {
+                var copy = el("button", { type: "button", text: "Copy" });
+                copy.addEventListener("click", function () {
+                    try {
+                        navigator.clipboard.writeText(data.intro_note).then(function () {
+                            copy.textContent = "Copied"; setTimeout(function () { copy.textContent = "Copy"; }, 1500);
+                        });
+                    } catch (e) { /* clipboard blocked; text stays selectable */ }
+                });
+                memoEl.appendChild(sec("Draft note", "To the founder. Edit before sending.", el("div", { class: "letter" }, [copy, el("div", { class: "note", text: data.intro_note })])));
+            }
+
+            // Hiring + stack
+            var hiring = intel.hiring_signals || [], stack = intel.tech_stack || [];
+            if (hiring.length || stack.length) {
+                var hl = el("ul");
+                hiring.forEach(function (h) { hl.appendChild(el("li", { text: h })); });
+                memoEl.appendChild(sec("Details", null, el("details", { class: "more" }, [
+                    el("summary", { text: "Hiring and tech stack" }), hiring.length ? hl : null,
+                    stack.length ? el("div", { class: "stack", text: stack.join(" · ") }) : null
+                ])));
+            }
+
+            // Sources
+            var srcList = el("ol");
+            cites.forEach(function (u, i) {
+                var shown = u.replace(/^https?:\/\/(www\.)?/, "");
+                if (shown.length > 72) shown = shown.slice(0, 70) + "…";
+                srcList.appendChild(el("li", { id: "src-" + (i + 1) }, [el("a", { href: u, target: "_blank", rel: "noopener nofollow", text: shown })]));
+            });
+            var cov = el("div", { class: "coverage" }, ["Checked: "]);
+            Object.keys(SOURCE_LABELS).forEach(function (k) {
+                var ok = checked[k], off = ok && unrelated.indexOf(k) !== -1;
+                cov.appendChild(el("span", {
+                    class: off ? "off" : ok ? "ok" : "no",
+                    title: off ? "Results were about a different company with the same name, so they were ignored" : ok ? "Returned data" : "Checked, nothing found",
+                    text: SOURCE_LABELS[k] + (off ? " (other company)" : "")
+                }));
+            });
+            memoEl.appendChild(el("section", { class: "sec sources" }, [el("div", { class: "rail", text: "Sources" }), el("div", {}, [cites.length ? srcList : null, cov])]));
+
+            memoEl.style.display = "block";
+        }
+
+        // Pre-run examples
+        var picker = document.getElementById("examples");
+        function select(btn, file) {
+            Array.prototype.forEach.call(picker.querySelectorAll("button"), function (b) { b.setAttribute("aria-pressed", "false"); });
+            btn.setAttribute("aria-pressed", "true");
+            fetch("/static/speedrun/examples/" + encodeURIComponent(file))
+                .then(function (r) { return r.json(); }).then(render)
+                .catch(function () { setStatus("Could not load that example.", true); });
+        }
+        fetch("/static/speedrun/examples/index.json")
+            .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
+            .then(function (list) {
+                picker.textContent = "";
+                (list || []).forEach(function (ex, i) {
+                    var name = ex.company_name.charAt(0).toUpperCase() + ex.company_name.slice(1);
+                    var b = el("button", { type: "button", "aria-pressed": "false", text: name });
+                    b.addEventListener("click", function () { select(b, ex.file); });
+                    picker.appendChild(b);
+                    if (i === 0) select(b, ex.file);
+                });
+            })
+            .catch(function () { picker.textContent = ""; });
+
+        // Live check
+        var form = document.getElementById("form"), go = document.getElementById("go");
+        form.addEventListener("submit", function (e) {
+            e.preventDefault();
+            var domain = document.getElementById("domain").value.trim();
+            var profile = document.getElementById("profile").value.trim();
+            if (!domain) return;
+            Array.prototype.forEach.call(picker.querySelectorAll("button"), function (b) { b.setAttribute("aria-pressed", "false"); });
+            go.disabled = true; memoEl.style.display = "none";
+            var started = Date.now(), msg = "Reading the site, news, GitHub, job boards, Hacker News and reviews";
+            setStatus(msg + "...");
+            var timer = setInterval(function () { setStatus(msg + "... " + Math.round((Date.now() - started) / 1000) + "s"); }, 1000);
+            fetch("/api/candidate", {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ domain: domain, candidate_profile: profile || null })
+            })
+                .then(function (r) {
+                    if (r.status === 429) return { success: false, error: "Too many checks in a minute. Wait a moment and try again." };
+                    if (r.status === 422) return { success: false, error: "That doesn't look like a company website." };
+                    return r.json();
+                })
+                .then(function (d) { render(d); if (d && d.success) memoEl.scrollIntoView({ behavior: "smooth", block: "start" }); })
+                .catch(function () { setStatus("Could not reach the server. Try again.", true); })
+                .then(function () { clearInterval(timer); go.disabled = false; });
+        });
+    })();
+    </script>
+</body>
+</html>

@@ -302,6 +302,14 @@ def _analyze_jobs(jobs: list[dict], source_platform: str) -> str:
     return "\n".join(parts)
 
 
+# Public board pages, so a cited job source points at the listings themselves
+_BOARD_URLS = {
+    "Greenhouse": "https://boards.greenhouse.io/{slug}",
+    "Lever": "https://jobs.lever.co/{slug}",
+    "Ashby": "https://jobs.ashbyhq.com/{slug}",
+}
+
+
 async def fetch_jobs(domain: str) -> SourceResult:
     """
     Fetch job postings from external ATS platforms.
@@ -355,7 +363,7 @@ async def fetch_jobs(domain: str) -> SourceResult:
         if analysis:
             return SourceResult(
                 source_type=SourceType.JOBS,
-                url=f"https://{domain}/careers",
+                url=_BOARD_URLS.get(platform, "https://{domain}/careers").format(slug=slug, domain=domain),
                 content=analysis,
                 fetched=True,
             )

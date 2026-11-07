@@ -435,6 +435,43 @@ INTELLIGENCE_SCHEMA = {
 }
 
 
+def _usable(result) -> bool:
+    return bool(result) and not isinstance(result, Exception) and result.fetched
+
+
+def format_source_sections(
+    website_result: SourceResult,
+    news_result: SourceResult,
+    github_result: SourceResult,
+    jobs_result: SourceResult | None = None,
+    community_result: SourceResult | None = None,
+    reviews_result: SourceResult | None = None,
+    careers_data: str | None = None,
+) -> dict[str, str]:
+    """Render each source as prompt text, with an explicit note when it's missing.
+
+    Shared by sales and candidate synthesis so both see identical source data.
+    """
+    return {
+        "website_content": website_result.content if website_result.fetched else "No website data available.",
+        "news_content": news_result.content if news_result.fetched else "No recent news found.",
+        "github_content": github_result.content if github_result.fetched else "No GitHub presence found.",
+        "careers_content": careers_data or "No structured careers data available.",
+        "jobs_content": (
+            jobs_result.content if _usable(jobs_result)
+            else "No external job board data found (checked Greenhouse, Lever, Ashby)."
+        ),
+        "community_content": (
+            community_result.content if _usable(community_result)
+            else "No community discussion data available."
+        ),
+        "reviews_content": (
+            reviews_result.content if _usable(reviews_result)
+            else "No customer review data available."
+        ),
+    }
+
+
 async def synthesize_intelligence(
     domain: str,
     website_result: SourceResult,
@@ -454,28 +491,10 @@ async def synthesize_intelligence(
     client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
     # Build the user prompt with available data
-    website_content = website_result.content if website_result.fetched else "No website data available."
-    news_content = news_result.content if news_result.fetched else "No recent news found."
-    github_content = github_result.content if github_result.fetched else "No GitHub presence found."
-    careers_content = careers_data or "No structured careers data available."
-
-    # Job postings from external ATS platforms
-    if jobs_result and not isinstance(jobs_result, Exception) and jobs_result.fetched:
-        jobs_content = jobs_result.content
-    else:
-        jobs_content = "No external job board data found (checked Greenhouse, Lever, Ashby)."
-
-    # Community discussions from Hacker News
-    if community_result and not isinstance(community_result, Exception) and community_result.fetched:
-        community_content = community_result.content
-    else:
-        community_content = "No community discussion data available."
-
-    # Customer reviews from review platforms
-    if reviews_result and not isinstance(reviews_result, Exception) and reviews_result.fetched:
-        reviews_content = reviews_result.content
-    else:
-        reviews_content = "No customer review data available."
+    sections = format_source_sections(
+        website_result, news_result, github_result,
+        jobs_result, community_result, reviews_result, careers_data,
+    )
 
     selling_context = ""
     if seller_content:
@@ -504,13 +523,7 @@ async def synthesize_intelligence(
         domain=domain,
         fetch_date=fetch_date,
         selling_context=selling_context,
-        website_content=website_content,
-        news_content=news_content,
-        github_content=github_content,
-        careers_content=careers_content,
-        jobs_content=jobs_content,
-        community_content=community_content,
-        reviews_content=reviews_content,
+        **sections,
     )
 
     logger.info(f"Sending synthesis request to OpenAI ({len(user_prompt)} chars)...")

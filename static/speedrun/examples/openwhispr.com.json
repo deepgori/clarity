@@ -1,0 +1,168 @@
+{
+  "success": true,
+  "intelligence": {
+    "company_name": "OpenWhispr",
+    "domain": "openwhispr.com",
+    "what_they_do": "OpenWhispr makes open-source voice dictation, meeting notes, audio transcription, and related AI tools that can run locally or through cloud transcription.",
+    "who_they_sell_to": "Individuals and teams that need speech-to-text, meeting notes, and transcription, with an Enterprise plan for organizations needing SSO, SCIM, audit logs, retention controls, and support.",
+    "industry": "Speech-to-text software",
+    "stage": "Backed by a16z Speedrun",
+    "bottom_line": "OpenWhispr has a real public repo with 10,889 stars, 5 of 6 checked repos active in the last 30 days, and 3 listed in-person roles across engineering and marketing. The biggest unknown is business maturity: funding amount, runway, paid conversion, team size, and enterprise readiness are not answered by the fetched sources.",
+    "claims_checked": [
+      {
+        "claim": "GitHub 10.9k",
+        "claim_url": "https://openwhispr.com/",
+        "verdict": "verified",
+        "evidence": "The GitHub data for OpenWhispr/openwhispr shows 10,889 stars and 1,423 forks.",
+        "evidence_url": "https://github.com/OpenWhispr/openwhispr"
+      },
+      {
+        "claim": "Downloaded by 150k+ users",
+        "claim_url": "https://openwhispr.com/",
+        "verdict": "unverified",
+        "evidence": "No independent download counter, package analytics, store listing, or user metric was provided to confirm the 150k+ download claim.",
+        "evidence_url": ""
+      },
+      {
+        "claim": "Available on macOS, Windows, Linux, and iOS",
+        "claim_url": "https://openwhispr.com/",
+        "verdict": "partly",
+        "evidence": "GitHub shows a Windows package manifest repo named winget-pkgs, Swift and Objective-C code that support Apple-platform work, and the main repo describes the app as cross-platform, but the fetched data does not independently confirm all four platforms including Linux and iOS distribution.",
+        "evidence_url": "https://github.com/OpenWhispr/openwhispr"
+      },
+      {
+        "claim": "Open source voice-to-text",
+        "claim_url": "https://openwhispr.com/about",
+        "verdict": "verified",
+        "evidence": "The public GitHub organization includes the main openwhispr repo described as a voice-to-text dictation app with local and cloud models.",
+        "evidence_url": "https://github.com/OpenWhispr/openwhispr"
+      },
+      {
+        "claim": "HIPAA, ISO 27001, SOC 2 Type II, GDPR",
+        "claim_url": "https://openwhispr.com/",
+        "verdict": "unverified",
+        "evidence": "The fetched sources only show the compliance labels and a Trust Center link; certification reports, audit dates, or a DPA would settle this.",
+        "evidence_url": ""
+      }
+    ],
+    "signals": [
+      {
+        "signal": "5 of 6 checked GitHub repos had commits within 30 days, including the main openwhispr repo on 2026-11-06 and model-registry on 2026-11-04.",
+        "why_it_matters": "A candidate would likely join a product that is still being actively shipped, especially around the desktop app and model catalog.",
+        "source_url": "https://github.com/OpenWhispr/openwhispr",
+        "confidence": 0.92
+      },
+      {
+        "signal": "The careers page lists 3 open roles: Founding Engineering Lead, Founding Engineer, and Social & Brand Growth Creator, all in person in San Francisco or Chicago.",
+        "why_it_matters": "The team is small enough that new hires would probably own broad scope, but the in-person and no-sponsorship constraints matter early.",
+        "source_url": "https://openwhispr.com/careers",
+        "confidence": 0.95
+      },
+      {
+        "signal": "The main GitHub repo has 10,889 stars and 1,423 forks as of the fetched data, matching the site’s 10.9k GitHub badge.",
+        "why_it_matters": "There is visible developer interest around the project, which can help with distribution but also raises expectations for support and roadmap clarity.",
+        "source_url": "https://github.com/OpenWhispr/openwhispr",
+        "confidence": 0.9
+      },
+      {
+        "signal": "The product surface is expanding beyond dictation: pricing lists Agent mode, MCP integration, chat over your data, API access, CLI, mobile companion app, and meeting recordings.",
+        "why_it_matters": "Engineering work may span desktop, mobile, cloud transcription, integrations, and enterprise admin rather than a single dictation app.",
+        "source_url": "https://openwhispr.com/pricing",
+        "confidence": 0.78
+      },
+      {
+        "signal": "The blog shows 2026 content aimed at compliance and workflows, including a HIPAA-compliant AI note takers article on August 11, 2026 and a Google Docs voice typing guide on June 26, 2026.",
+        "why_it_matters": "The go-to-market angle appears to include security-conscious users and SEO-driven acquisition, not only open-source distribution.",
+        "source_url": "https://openwhispr.com/blog",
+        "confidence": 0.75
+      },
+      {
+        "signal": "Recent press-like search results include WIRED on May 30, 2026 asking whether users need to pay for transcription software and How-To Geek on May 2 and May 23, 2026 covering free open-source apps.",
+        "why_it_matters": "External discovery may be growing through consumer and productivity coverage, but the fetched summaries do not prove deep company traction.",
+        "source_url": "https://news.google.com/rss/articles/CBMiiwFBVV95cUxPb0x6ZWR4elJiTThGd05XWjJRbG5pSG9RWjdaX0UzWFo5WkNsVVN1N1pLUGxtenN3VHN6UTJobUdMV0pDZTBjYWl6NDdRTVRTYm9ua1hKU0VlRExLcjRoZ3BXN04zNnlkbm1xNzA5b1ZsMXNic0c2enNUMEFoUVg4d0k3RVNOZFZjLTJz?oc=5",
+        "confidence": 0.58
+      }
+    ],
+    "contradictions": [],
+    "questions_for_founder": [
+      {
+        "question": "The site says OpenWhispr has been downloaded about 150,000 times, while GitHub shows 10,889 stars and 1,423 forks. What is the active user base today, and how many users are on paid Pro, Business, or Enterprise plans?",
+        "based_on": "Careers page says about 150,000 downloads; GitHub data shows 10,889 stars and 1,423 forks.",
+        "source_url": "https://openwhispr.com/careers"
+      },
+      {
+        "question": "The careers page lists only 3 roles, with 2 in engineering and 1 in marketing, all in person in San Francisco or Chicago. What should the Founding Engineer own in the first 90 days?",
+        "based_on": "Open roles are Founding Engineering Lead, Founding Engineer, and Social & Brand Growth Creator in San Francisco or Chicago.",
+        "source_url": "https://openwhispr.com/careers"
+      },
+      {
+        "question": "5 of 6 public repos had commits within 30 days, including model-registry on 2026-11-04 and openwhispr on 2026-11-06. Which work is happening in public repos versus private repos now?",
+        "based_on": "GitHub activity summary shows active commits across the main app, model registry, plugin, issue assets, and winget-pkgs.",
+        "source_url": "https://github.com/OpenWhispr/openwhispr"
+      },
+      {
+        "question": "Pricing lists Enterprise features like SSO, SAML, SCIM, audit logs, retention controls, DPA, and dedicated support. How much of that is already deployed with customers versus still being built?",
+        "based_on": "Enterprise plan lists SSO, SAML, SCIM, audit logs, org-wide retention controls, compliance and DPA.",
+        "source_url": "https://openwhispr.com/pricing"
+      },
+      {
+        "question": "The homepage says the company is backed by a16z Speedrun, but no round size or runway is stated. How many months of runway do you have at the current hiring plan?",
+        "based_on": "Homepage shows a16z Speedrun backing, but the fetched sources do not state funding amount, valuation, revenue, or runway.",
+        "source_url": "https://openwhispr.com/"
+      }
+    ],
+    "evidence_gaps": [
+      "No listings found on Greenhouse, Lever or Ashby",
+      "Hacker News results were about something else with the same name, so they were ignored",
+      "Funding amount and runway",
+      "Team size",
+      "Paid customer count and revenue mix",
+      "How complete the Enterprise features are",
+      "Active usage after the 150,000 downloads"
+    ],
+    "unrelated_sources": [
+      "community"
+    ],
+    "tech_stack": [
+      "JavaScript",
+      "TypeScript",
+      "Swift",
+      "C",
+      "CSS",
+      "Objective-C",
+      "Python",
+      "C++",
+      "Ruby",
+      "Shell"
+    ],
+    "hiring_signals": [
+      "3 open roles listed on the careers page.",
+      "Engineering has 2 roles: Founding Engineering Lead and Founding Engineer.",
+      "Marketing has 1 role: Social & Brand Growth Creator.",
+      "All roles are full-time and in person in San Francisco or Chicago.",
+      "Visa sponsorship is not available.",
+      "Listed pay ranges are $160K-$200K for Founding Engineering Lead, $140K-$180K for Founding Engineer, and $60K-$120K for Social & Brand Growth Creator."
+    ],
+    "sources_used": [
+      "https://openwhispr.com/",
+      "https://openwhispr.com/pricing",
+      "https://openwhispr.com/careers",
+      "https://openwhispr.com/blog",
+      "https://github.com/OpenWhispr/openwhispr",
+      "https://news.google.com/rss/articles/CBMiiwFBVV95cUxPb0x6ZWR4elJiTThGd05XWjJRbG5pSG9RWjdaX0UzWFo5WkNsVVN1N1pLUGxtenN3VHN6UTJobUdMV0pDZTBjYWl6NDdRTVRTYm9ua1hKU0VlRExLcjRoZ3BXN04zNnlkbm1xNzA5b1ZsMXNic0c2enNUMEFoUVg4d0k3RVNOZFZjLTJz?oc=5"
+    ],
+    "overall_confidence": 0.78,
+    "data_freshness": "Data is current as of 2026-11-06"
+  },
+  "intro_note": "5 of 6 checked repos had commits within 30 days, including openwhispr on 2026-11-06 and model-registry on 2026-11-04. That reads like a product moving quickly while still keeping a lot of the core work in the open.\n\n[one line on what you have built]\n\nWhich work is happening in public repos versus private repos now? Happy to do a 20-minute call if useful.",
+  "sources_checked": {
+    "website": true,
+    "news": true,
+    "github": true,
+    "jobs": false,
+    "community": true,
+    "reviews": true
+  },
+  "error": null,
+  "processing_time_ms": 39977
+}

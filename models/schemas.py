@@ -126,3 +126,100 @@ class ClarityResponse(BaseModel):
     suggested_email: Optional[str] = None
     error: Optional[str] = None
     processing_time_ms: int = Field(description="Total processing time in milliseconds")
+
+
+# --- Candidate Mode Models ---
+#
+# Same sources and pipeline as sales mode, pointed at a job seeker instead of
+# a sales agent: someone deciding whether to apply to a company, or preparing
+# for a call with its founder.
+
+class CandidateSignal(BaseModel):
+    """An evidence-backed observation that matters to someone considering a job there."""
+    signal: str = Field(description="What was observed")
+    why_it_matters: str = Field(description="What this means for a candidate")
+    source_url: str = Field(description="URL where this was found")
+    confidence: float = Field(ge=0.0, le=1.0, description="Confidence score 0-1")
+
+
+class CandidateContradiction(BaseModel):
+    """A tension between sources, turned into a question worth asking the founder."""
+    claim_a: str = Field(description="What one source says")
+    source_a: str = Field(description="URL of first source")
+    claim_b: str = Field(description="What another source says that conflicts")
+    source_b: str = Field(description="URL of second source")
+    resolution: str = Field(description="Most likely innocent explanation")
+    question_to_ask: str = Field(description="A neutral question a candidate could ask the founder about it")
+
+
+class FounderQuestion(BaseModel):
+    """A question for the founder call, tied to a specific finding."""
+    question: str
+    based_on: str = Field(description="The specific finding that prompts this question")
+    source_url: str = Field(default="", description="Where that finding came from")
+
+
+class ClaimCheck(BaseModel):
+    """One of the company's own claims, checked against independent sources."""
+    claim: str = Field(description="What the company says about itself")
+    claim_url: str = Field(description="Where the company says it")
+    verdict: str = Field(description="verified, partly, contradicted or unverified")
+    evidence: str = Field(description="The detail that decided the verdict")
+    evidence_url: str = Field(default="", description="Where that evidence came from")
+
+
+class CandidateIntelligence(BaseModel):
+    """Company research shaped for a job seeker."""
+    company_name: str
+    domain: str
+    what_they_do: str = Field(description="One-sentence description of the company")
+    who_they_sell_to: str = Field(description="Their customers, as stated in the sources")
+    industry: str
+    stage: str = Field(description="Stage if the sources state it, otherwise says it was not found")
+
+    bottom_line: str = Field(default="", description="Two sentences: what's solid, what's unknown")
+    claims_checked: list[ClaimCheck] = Field(default_factory=list)
+    signals: list[CandidateSignal] = Field(default_factory=list)
+    contradictions: list[CandidateContradiction] = Field(default_factory=list)
+    questions_for_founder: list[FounderQuestion] = Field(default_factory=list)
+    evidence_gaps: list[str] = Field(
+        default_factory=list,
+        description="Things a candidate would want to know that the sources did not answer",
+    )
+    unrelated_sources: list[str] = Field(
+        default_factory=list,
+        description="Sources whose results were about something else with the same name",
+    )
+
+    tech_stack: list[str] = Field(default_factory=list)
+    hiring_signals: list[str] = Field(default_factory=list)
+
+    sources_used: list[str] = Field(default_factory=list)
+    overall_confidence: float = Field(ge=0.0, le=1.0)
+    data_freshness: str
+
+
+class CandidateRequest(BaseModel):
+    """Candidate mode request body."""
+    domain: str = Field(description="Company domain to research, e.g. 'linear.app'")
+    candidate_profile: Optional[str] = Field(
+        default=None,
+        max_length=1500,
+        description=(
+            "Optional: a short bio, and/or a GitHub profile URL. Used only to "
+            "tailor the intro note. Public GitHub repos are read if a URL is given."
+        ),
+    )
+
+
+class CandidateResponse(BaseModel):
+    """Candidate mode response wrapper."""
+    success: bool
+    intelligence: Optional[CandidateIntelligence] = None
+    intro_note: Optional[str] = None
+    sources_checked: dict[str, bool] = Field(
+        default_factory=dict,
+        description="Which sources returned data, so gaps are visible",
+    )
+    error: Optional[str] = None
+    processing_time_ms: int = Field(description="Total processing time in milliseconds")

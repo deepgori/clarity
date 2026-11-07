@@ -22,7 +22,10 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
-from models.schemas import ClarityRequest, ClarityResponse, CompanyIntelligence
+from models.schemas import (
+    ClarityRequest, ClarityResponse, CompanyIntelligence,
+    CandidateRequest, CandidateResponse,
+)
 from sources.website import fetch_website
 from sources.news import fetch_news
 from sources.github import fetch_github, refetch_github_with_website_hint
@@ -31,6 +34,10 @@ from sources.jobs import fetch_jobs
 from sources.community import fetch_community
 from sources.reviews import fetch_reviews
 from synthesis.engine import synthesize_intelligence
+from synthesis.candidate import (
+    synthesize_candidate_intelligence, generate_intro_note, sources_checked_map,
+)
+from sources.candidate_profile import build_candidate_context
 from agent import generate_generic_email, generate_clarity_email
 from cache import get_cached, set_cached
 from security import rate_limiter, validate_domain
@@ -133,6 +140,12 @@ async def serve_frontend():
     return FileResponse(str(STATIC_DIR / "index.html"))
 
 
+@app.get("/speedrun")
+async def serve_speedrun():
+    """Candidate mode page."""
+    return FileResponse(str(STATIC_DIR / "speedrun.html"))
+
+
 @app.get("/health")
 async def health_check():
     """Basic health check endpoint."""
@@ -184,16 +197,64 @@ class AnalysisResult:
         self.success = intelligence is not None
 
 
+class FetchedSources:
+    """Everything Phase 1 produced, ready for either synthesis mode."""
+    def __init__(self, error=None, **kw):
+        self.error = error
+        self.website = kw.get("website")
+        self.news = kw.get("news")
+        self.github = kw.get("github")
+        self.jobs = kw.get("jobs")
+        self.community = kw.get("community")
+        self.reviews = kw.get("reviews")
+        self.careers_formatted = kw.get("careers_formatted")
+        self.seller_content = kw.get("seller_content")
+
+
 async def _run_analysis(
     domain: str,
     seller_domain_str: str | None = None,
     context: str | None = None,
 ) -> AnalysisResult:
     """
-    Shared analysis pipeline: fetch all sources, correct GitHub org,
-    extract careers, and synthesize intelligence.
+    Shared sales analysis pipeline: fetch all sources, then synthesize
+    sales intelligence.
 
     Both /api/company and /api/compare call this.
+    """
+    fetched = await _fetch_sources(domain, seller_domain_str)
+    if fetched.error:
+        return AnalysisResult(error=fetched.error)
+
+    # Phase 2: AI synthesis (30s timeout)
+    logger.info("Phase 2: Synthesis with contradiction detection")
+
+    try:
+        intelligence = await asyncio.wait_for(
+            synthesize_intelligence(
+                domain=domain,
+                website_result=fetched.website,
+                news_result=fetched.news or fetched.website,  # fallback to avoid None
+                github_result=fetched.github or fetched.website,
+                jobs_result=fetched.jobs,
+                community_result=fetched.community,
+                reviews_result=fetched.reviews,
+                seller_content=fetched.seller_content,
+                context=context,
+                careers_data=fetched.careers_formatted,
+            ),
+            timeout=30.0,
+        )
+    except asyncio.TimeoutError:
+        return AnalysisResult(error="AI synthesis timed out. OpenAI may be experiencing delays.")
+
+    return AnalysisResult(intelligence=intelligence, seller_content=fetched.seller_content)
+
+
+async def _fetch_sources(domain: str, seller_domain_str: str | None = None) -> FetchedSources:
+    """
+    Phase 1 of every pipeline: fetch all sources in parallel, correct the
+    GitHub org if it looks wrong, and extract structured careers data.
     """
     # Phase 1: Parallel source fetching with overall timeout
     logger.info("Phase 1: Parallel source fetching")
@@ -219,7 +280,7 @@ async def _run_analysis(
         )
     except asyncio.TimeoutError:
         logger.warning(f"Source fetching timed out for {domain} after 45s")
-        return AnalysisResult(error=f"Fetching data for {domain} took too long. Try again or use a more specific domain.")
+        return FetchedSources(error=f"Fetching data for {domain} took too long. Try again or use a more specific domain.")
 
     website_result = results[0]
     news_result = results[1]
@@ -252,7 +313,7 @@ async def _run_analysis(
 
     # Website is required
     if isinstance(website_result, Exception) or not website_result.fetched:
-        return AnalysisResult(error=f"Could not fetch website for {domain}. The website may be unreachable.")
+        return FetchedSources(error=f"Could not fetch website for {domain}. The website may be unreachable.")
 
     # Phase 1.1: Check if GitHub org mapping looks wrong
     # If GitHub data has all abandoned/unknown repos, try extracting the
@@ -296,36 +357,20 @@ async def _run_analysis(
         except (asyncio.TimeoutError, Exception) as e:
             logger.warning(f"Careers extraction failed: {e}")
 
-    # Phase 2: AI synthesis (30s timeout)
-    logger.info("Phase 2: Synthesis with contradiction detection")
-
     # Safely pass source results (may be exceptions from gather)
-    safe_news = news_result if not isinstance(news_result, Exception) else None
-    safe_github = github_result if not isinstance(github_result, Exception) else None
-    safe_jobs = jobs_result if not isinstance(jobs_result, Exception) else None
-    safe_community = community_result if not isinstance(community_result, Exception) else None
-    safe_reviews = reviews_result if not isinstance(reviews_result, Exception) else None
+    def _safe(r):
+        return r if not isinstance(r, Exception) else None
 
-    try:
-        intelligence = await asyncio.wait_for(
-            synthesize_intelligence(
-                domain=domain,
-                website_result=website_result,
-                news_result=safe_news or website_result,  # fallback to avoid None
-                github_result=safe_github or website_result,
-                jobs_result=safe_jobs,
-                community_result=safe_community,
-                reviews_result=safe_reviews,
-                seller_content=seller_content,
-                context=context,
-                careers_data=careers_formatted,
-            ),
-            timeout=30.0,
-        )
-    except asyncio.TimeoutError:
-        return AnalysisResult(error="AI synthesis timed out. OpenAI may be experiencing delays.")
-
-    return AnalysisResult(intelligence=intelligence, seller_content=seller_content)
+    return FetchedSources(
+        website=website_result,
+        news=_safe(news_result),
+        github=_safe(github_result),
+        jobs=_safe(jobs_result),
+        community=_safe(community_result),
+        reviews=_safe(reviews_result),
+        careers_formatted=careers_formatted,
+        seller_content=seller_content,
+    )
 
 
 @app.post("/api/company", response_model=ClarityResponse)
@@ -433,6 +478,116 @@ async def analyze_company(
             error=f"Analysis failed: {str(e)}",
             processing_time_ms=elapsed,
         )
+
+
+# Cache namespace for candidate mode. Not a valid domain, so it can never
+# collide with a real seller_domain from sales mode.
+CANDIDATE_CACHE_NS = "__candidate_mode__"
+
+
+async def run_candidate_pipeline(domain: str, candidate_profile: str | None) -> CandidateResponse:
+    """Fetch sources, synthesize for a candidate, write the intro note.
+
+    Separate from the HTTP handler so scripts can pre-run examples.
+    """
+    start_time = time.time()
+
+    def elapsed():
+        return int((time.time() - start_time) * 1000)
+
+    fetched, candidate_context = await asyncio.gather(
+        _fetch_sources(domain),
+        build_candidate_context(candidate_profile),
+    )
+    if fetched.error:
+        return CandidateResponse(success=False, error=fetched.error, processing_time_ms=elapsed())
+
+    checked = sources_checked_map(fetched.news, fetched.github, fetched.jobs, fetched.community, fetched.reviews)
+
+    try:
+        intelligence = await asyncio.wait_for(
+            synthesize_candidate_intelligence(
+                domain=domain,
+                website_result=fetched.website,
+                news_result=fetched.news,
+                github_result=fetched.github,
+                jobs_result=fetched.jobs,
+                community_result=fetched.community,
+                reviews_result=fetched.reviews,
+                careers_data=fetched.careers_formatted,
+            ),
+            timeout=float(os.getenv("CANDIDATE_SYNTH_TIMEOUT", "30")),
+        )
+    except asyncio.TimeoutError:
+        return CandidateResponse(
+            success=False, error="AI synthesis timed out. Try again in a minute.",
+            sources_checked=checked, processing_time_ms=elapsed(),
+        )
+
+    try:
+        intro_note = await asyncio.wait_for(
+            generate_intro_note(intelligence, candidate_context), timeout=30.0,
+        )
+    except asyncio.TimeoutError:
+        logger.warning("Intro note timed out, returning without it")
+        intro_note = None
+
+    return CandidateResponse(
+        success=True,
+        intelligence=intelligence,
+        intro_note=intro_note,
+        sources_checked=checked,
+        processing_time_ms=elapsed(),
+    )
+
+
+@app.post("/api/candidate", response_model=CandidateResponse)
+async def analyze_for_candidate(
+    request: CandidateRequest,
+    http_request: Request,
+    _key: str | None = Depends(verify_api_key),
+):
+    """
+    Research a company for a job seeker.
+
+    Same parallel sources as /api/company. Returns what the company does,
+    signals that matter to a candidate, contradictions as questions to ask,
+    explicit evidence gaps, and a short intro note to the founder.
+    """
+    client_ip = http_request.headers.get("x-forwarded-for", http_request.client.host).split(",")[0].strip()
+    if not rate_limiter.is_allowed(client_ip):
+        raise HTTPException(
+            status_code=429,
+            detail=f"Rate limit exceeded. Max {rate_limiter.max_requests} requests per minute.",
+        )
+
+    start_time = time.time()
+    domain = normalize_domain(request.domain)
+    domain_error = validate_domain(domain)
+    if domain_error:
+        return CandidateResponse(success=False, error=domain_error, processing_time_ms=0)
+
+    profile = (request.candidate_profile or "").strip() or None
+    logger.info(f"Candidate analysis: {domain} (profile: {'yes' if profile else 'no'})")
+
+    cached = get_cached(domain, CANDIDATE_CACHE_NS, profile)
+    if cached:
+        cached["processing_time_ms"] = int((time.time() - start_time) * 1000)
+        return CandidateResponse(**cached)
+
+    try:
+        response = await run_candidate_pipeline(domain, profile)
+    except Exception as e:
+        elapsed = int((time.time() - start_time) * 1000)
+        logger.error(f"Candidate analysis error for {domain}: {e}", exc_info=True)
+        log_request(domain, False, elapsed, client_ip, CANDIDATE_CACHE_NS)
+        return CandidateResponse(success=False, error="Analysis failed. Try again in a minute.", processing_time_ms=elapsed)
+
+    log_request(domain, response.success, response.processing_time_ms, client_ip, CANDIDATE_CACHE_NS,
+                has_email=bool(response.intro_note))
+    if response.success:
+        set_cached(domain, response.model_dump(), CANDIDATE_CACHE_NS, profile)
+    return response
 
 
 class CompareRequest(BaseModel):
