@@ -574,6 +574,10 @@ async def synthesize_intelligence(
     # and scrub any job-posting inferences that leaked into other fields.
     _fix_enterprise_hiring_inference(parsed)
 
+    # DETERMINISTIC FIX: if no contradictions survived, strip strategy text
+    # that still references one (the LLM writes strategy before filters run).
+    _strip_orphan_contradiction_refs(parsed)
+
     logger.info(
         f"Synthesis complete: {parsed.get('company_name', 'Unknown')} | "
         f"Confidence: {parsed.get('overall_confidence', 0)} | "
@@ -735,6 +739,36 @@ def _fix_enterprise_hiring_inference(parsed: dict) -> None:
                         '', value, flags=re.IGNORECASE
                     )
                     strategy[field] = value.strip() if value.strip() else strategy.get(field, "")
+
+def _strip_orphan_contradiction_refs(parsed: dict) -> None:
+    """
+    Remove sentences in sales_strategy that mention a contradiction when the
+    final contradictions list is empty. Prevents output like "addressing the
+    contradiction in their AI claim" alongside `contradictions: []`.
+    """
+    import re
+
+    if parsed.get("contradictions"):
+        return
+
+    strat = parsed.get("sales_strategy") or {}
+    pattern = re.compile(r"contradict|inconsisten|discrepanc", re.IGNORECASE)
+    for field in ["relevance_reasoning", "recommended_angle", "conversation_starter", "timing_assessment"]:
+        text = strat.get(field)
+        if not isinstance(text, str) or not pattern.search(text):
+            continue
+        sentences = re.split(r"(?<=[.!?])\s+", text)
+        kept = [s for s in sentences if not pattern.search(s)]
+        if kept:
+            strat[field] = " ".join(kept)
+        else:
+            # Whole field was about the phantom contradiction; drop the clause
+            strat[field] = pattern.sub("", text).strip() if field == "conversation_starter" else (
+                "No evidence-backed angle identified from available sources."
+                if field == "recommended_angle" else
+                "Fit assessment limited: no contradictions or specific pain points found in available sources."
+            )
+
 
 def _scrub_synthesis_output(parsed: dict) -> None:
     """Post-process synthesis output to remove banned phrases the LLM ignores."""

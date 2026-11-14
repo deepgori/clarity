@@ -38,7 +38,7 @@ from synthesis.candidate import (
     synthesize_candidate_intelligence, generate_intro_note, sources_checked_map,
 )
 from sources.candidate_profile import build_candidate_context
-from agent import generate_generic_email, generate_clarity_email
+from agent import generate_generic_email, generate_clarity_email, SUPPORTED_LANGUAGES
 from cache import get_cached, set_cached
 from security import rate_limiter, validate_domain
 from analytics import log_request, log_feedback, get_analytics_summary
@@ -416,8 +416,19 @@ async def analyze_company(
 
     logger.info(f"Analyzing: {domain}")
 
+    # Language for the suggested email (validated; unknown codes rejected)
+    language = (request.language or "en").strip().lower()
+    if language not in SUPPORTED_LANGUAGES:
+        return ClarityResponse(
+            success=False,
+            error=f"Unsupported language '{request.language}'. Use one of: {', '.join(SUPPORTED_LANGUAGES)}.",
+            processing_time_ms=0,
+        )
+    # Cache key includes language so FR and EN emails don't collide
+    cache_context = request.context if language == "en" else f"{request.context or ''}|lang={language}"
+
     # Check cache first
-    cached = get_cached(domain, seller_domain_str, request.context)
+    cached = get_cached(domain, seller_domain_str, cache_context)
     if cached:
         elapsed = int((time.time() - start_time) * 1000)
         cached["processing_time_ms"] = elapsed
@@ -444,6 +455,7 @@ async def analyze_company(
                 generate_clarity_email(
                     intelligence=result.intelligence,
                     selling=selling_desc,
+                    language=language,
                 ),
                 timeout=30.0,
             )
@@ -462,7 +474,7 @@ async def analyze_company(
         )
 
         # Cache the successful response
-        set_cached(domain, response_data.model_dump(), seller_domain_str, request.context)
+        set_cached(domain, response_data.model_dump(), seller_domain_str, cache_context)
 
         # Log analytics
         log_request(domain, True, elapsed, client_ip, seller_domain_str, has_email=bool(suggested_email))

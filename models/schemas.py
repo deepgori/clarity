@@ -117,6 +117,10 @@ class ClarityRequest(BaseModel):
         default=None,
         description="Optional extra context (e.g., 'focus on their enterprise tier', 'we just launched a new feature')"
     )
+    language: Optional[str] = Field(
+        default=None,
+        description="Language for the suggested email as an ISO 639-1 code: en, fr, de, es, it, pt, nl. Defaults to English."
+    )
 
 
 class ClarityResponse(BaseModel):

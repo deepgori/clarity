@@ -108,15 +108,9 @@ def _parse_serp_results(data: dict, company_name: str) -> str:
             if snippet:
                 other_mentions.append(f"  [{platform}] {snippet[:200]}")
 
-        # Capture blog/comparison reviews with ratings
-        elif rich_snippet and not platform:
-            top = rich_snippet.get("top", {})
-            extensions = top.get("detected_extensions", {})
-            rating = extensions.get("rating")
-            if rating:
-                ratings_found.append(
-                    f"  {source}: {rating}/5 (independent review)"
-                )
+        # Ratings from sites that aren't recognized review platforms (blogs,
+        # SEO comparison sites, aggregators) are deliberately dropped. They
+        # produced misleading signals like "3.6/5 on tooltrim.com".
 
     # Format ratings section
     if ratings_found:

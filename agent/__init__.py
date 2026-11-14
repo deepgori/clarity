@@ -113,11 +113,23 @@ async def generate_generic_email(
     return response.choices[0].message.content.strip()
 
 
+SUPPORTED_LANGUAGES = {
+    "en": "English",
+    "fr": "French",
+    "de": "German",
+    "es": "Spanish",
+    "it": "Italian",
+    "pt": "Portuguese",
+    "nl": "Dutch",
+}
+
+
 async def generate_clarity_email(
-    intelligence: CompanyIntelligence, selling: str
+    intelligence: CompanyIntelligence, selling: str, language: str | None = None
 ) -> str:
     """Generate a personalized email powered by Clarity intelligence."""
     client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+    lang_name = SUPPORTED_LANGUAGES.get((language or "en").lower(), "English")
 
     # Format signals with full context
     signals_text = "\n".join(
@@ -161,6 +173,11 @@ async def generate_clarity_email(
                 timing=intelligence.sales_strategy.timing_assessment,
                 decision_maker=intelligence.sales_strategy.decision_maker_profile,
                 avoid_topics=avoid_topics,
+            ) + (
+                f"\n\nWrite the entire email in {lang_name}, natural and native-sounding "
+                f"for a business reader (use the formal register where the language has one). "
+                f"Keep company and product names unchanged."
+                if lang_name != "English" else ""
             )},
         ],
         temperature=0.7,
